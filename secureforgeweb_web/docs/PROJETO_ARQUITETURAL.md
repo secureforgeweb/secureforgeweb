@@ -5,7 +5,7 @@
 **Versão:** 1.2  
 **Data:** 30/06/2026
 
-> Para o **estado operacional atual** (Entrega 3), consulte [RELATORIO.md](RELATORIO.md), [MANUAL.md](MANUAL.md) e [DEMO.md](DEMO.md). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark e migrações `0015`–`0016`.
+> Para o **estado operacional atual**, consulte [RELATORIO.md](RELATORIO.md) e [MANUAL.md](MANUAL.md). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark e migrações `0015`–`0016`.
 
 ---
 

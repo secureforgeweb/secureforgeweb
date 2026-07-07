@@ -140,7 +140,7 @@ Avaliar e melhorar a **postura de segurança** de aplicações web por meio de c
 | Benchmark admin | Gráfico de **postura**; não compara latência/custo por item OWASP |
 | Repositórios Git privados (SSH) | Limitado; recomendado HTTPS público |
 | Metadados de sugestão IA | Aplicados no wizard via `notes`; persistência dedicada pendente |
-| Vídeo demo formal | Roteiro em `DEMO.md`; gravação pendente |
+| Vídeo demo formal | Gravação pendente |
 | CI/CD | Scripts locais; pipeline automatizado pendente |
 
 ---
@@ -442,11 +442,8 @@ O **problema central** (hardening guiado de aplicações web) permaneceu inalter
 | Documento | Conteúdo |
 |---|---|
 | `PROJETO_ARQUITETURAL.md` | Arquitetura alvo e requisitos |
-| `GUIA_IMPLEMENTACAO.md` | Cronograma e fases |
 | `MANUAL.md` | Manual de uso |
-| `DEMO.md` | Roteiro de demonstração |
-| `APRESENTACAO.md` | Roteiro de slides |
-| `BRAND.md` | Identidade visual e avatar GitHub |
+| `docs/assets/github-avatar.png` | Avatar do perfil GitHub |
 
 ---
 

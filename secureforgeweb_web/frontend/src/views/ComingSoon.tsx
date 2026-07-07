@@ -22,7 +22,7 @@ export default function ComingSoon() {
           <h1 className="text-xl font-bold font-mono text-foreground">{title}</h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-md">
             Este módulo será implementado nas próximas fases do SecureForge Web.
-            Consulte o guia em <code className="text-primary">docs/GUIA_IMPLEMENTACAO.md</code>.
+            Consulte o relatório em <code className="text-primary">docs/RELATORIO.md</code>.
           </p>
         </div>
         <Button variant="outline" className="font-mono text-xs" onClick={() => navigate("/dashboard")}>

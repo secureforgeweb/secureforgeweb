@@ -239,8 +239,7 @@ This README stays in **English** for international sharing. **Full guides in Por
 |----------|---------|
 | [`secureforgeweb_web/readme-web.md`](secureforgeweb_web/readme-web.md) | Operational README — stack, env, local setup, scripts. |
 | [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) | End-user manual. |
-| [`secureforgeweb_web/docs/DEMO.md`](secureforgeweb_web/docs/DEMO.md) | Demonstration script (Entrega 3). |
 | [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | Documentation index. |
-| [`secureforgeweb_web/docs/RELATORIO.md`](secureforgeweb_web/docs/RELATORIO.md) | Current delivery report. |
+| [`secureforgeweb_web/docs/RELATORIO.md`](secureforgeweb_web/docs/RELATORIO.md) | Consolidated project report. |
 
 Prefer updating the files above when operational details change.

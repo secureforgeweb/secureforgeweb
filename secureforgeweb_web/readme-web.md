@@ -71,10 +71,8 @@ Ficheiros em **`docs/`**:
 | Documento | Público |
 |-----------|---------|
 | [`docs/MANUAL.md`](docs/MANUAL.md) | Utilizadores — fluxo completo |
-| [`docs/DEMO.md`](docs/DEMO.md) | Demonstração (~18–22 min) |
-| [`docs/APRESENTACAO.md`](docs/APRESENTACAO.md) | Roteiro de slides |
-| [`docs/RELATORIO.md`](docs/RELATORIO.md) | Relatório (estado atual) |
-| [`docs/BRAND.md`](docs/BRAND.md) | Identidade visual |
+| [`docs/RELATORIO.md`](docs/RELATORIO.md) | Relatório consolidado |
+| [`docs/PROJETO_ARQUITETURAL.md`](docs/PROJETO_ARQUITETURAL.md) | Arquitetura alvo |
 | [`docs/README.md`](docs/README.md) | Índice completo |
 
 README internacional (inglês) na **raiz do repositório**: [`../README.md`](../README.md).

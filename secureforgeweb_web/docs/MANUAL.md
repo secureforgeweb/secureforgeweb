@@ -207,10 +207,9 @@ Admin pode abrir análises e aplicações de outros usuários (somente leitura o
 
 ---
 
-## 12. Demonstração e relatórios
+## 12. Documentação relacionada
 
 | Documento | Conteúdo |
 |---|---|
-| [DEMO.md](DEMO.md) | Roteiro de apresentação (~18–22 min) |
-| [RELATORIO.md](RELATORIO.md) | Relatório técnico |
-| [APRESENTACAO.md](APRESENTACAO.md) | Roteiro de slides |
+| [RELATORIO.md](RELATORIO.md) | Relatório técnico consolidado |
+| [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Arquitetura alvo e requisitos |
