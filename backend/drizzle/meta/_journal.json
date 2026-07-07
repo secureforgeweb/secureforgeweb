@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1747900800000,
+      "tag": "0000_postgres_initial",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1750032000000,
+      "tag": "0010_posturaweb_phase1",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750636800000,
+      "tag": "0011_posturaweb_phase2",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1751241600000,
+      "tag": "0012_posturaweb_phase3",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1751846400000,
+      "tag": "0013_posturaweb_phase5",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1752451200000,
+      "tag": "0014_posturaweb_phase6b",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753056000000,
+      "tag": "0015_user_ai_assistant_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1754265600000,
+      "tag": "0017_analysis_item_evidence",
+      "breakpoints": true
+    }
+  ]
+}

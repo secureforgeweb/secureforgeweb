@@ -1,0 +1,36 @@
+ Fluxo principal da ferramenta e consolidação da solução
+Objetivo da entrega
+
+Nesta terceira entrega, cada equipe deverá implementar o fluxo principal de uso da ferramenta, demonstrando que a solução já consegue executar seu caso de uso central de maneira funcional.
+
+O objetivo desta etapa é consolidar o núcleo da ferramenta, saindo da base estrutural implementada na Entrega 2 e avançando para uma versão que já permita visualizar, de forma concreta, o valor da solução proposta.
+
+Ao final desta entrega, espera-se que a equipe já tenha uma versão funcional do principal fluxo da ferramenta, ainda que alguns refinamentos e diferenciais fiquem para a etapa final.
+
+Esta entrega corresponde à fase de implementação do núcleo funcional da solução, sendo o momento em que a equipe deve demonstrar que a ferramenta já cumpre, ao menos parcialmente, sua proposta principal.
+
+
+Cada equipe deverá submeter:
+
+1. Link do repositório atualizado
+O repositório deve mostrar claramente a evolução da ferramenta em relação à Entrega 2.
+
+2. Descrição breve do fluxo principal implementado
+A equipe deverá explicar, de forma objetiva:
+
+Qual é o fluxo principal da ferramenta
+O que já está funcionando
+Como o usuário interage com a solução
+3. Evidência do funcionamento da ferramenta
+A equipe deverá demonstrar que o núcleo da solução está funcional, por exemplo por meio de:
+
+sequência de telas
+ou descrição acompanhada de evidência visual.
+4. Funcionalidades implementadas até esta etapa
+A equipe deverá indicar:
+
+Funcionalidades concluídas
+Funcionalidades parcialmente implementadas
+Funcionalidades que ficaram para a etapa final.
+5. Ajustes realizados no projeto
+Caso a equipe tenha refinado algum ponto do foco, da arquitetura ou do escopo, isso deverá ser registrado brevemente.

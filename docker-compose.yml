@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: secureforgeweb-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: secureforgeweb_user
+      POSTGRES_PASSWORD: secureforgeweb_pass
+      POSTGRES_DB: secureforgeweb
+    ports:
+      - "5432:5432"
+    volumes:
+      - secureforgeweb_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secureforgeweb_user -d secureforgeweb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  secureforgeweb_pgdata:
