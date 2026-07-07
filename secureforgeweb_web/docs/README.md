@@ -19,7 +19,7 @@
 ## Início rápido
 
 - **Usar o sistema** → [MANUAL.md](MANUAL.md)
-- **Subir localmente** → [README.md](../README.md) na raiz do repositório
+- **Subir localmente** → [`readme-web.md`](../readme-web.md) ou [`README.md`](../../README.md) na raiz do repositório
 - **Demonstrar na banca** → [DEMO.md](DEMO.md) + [APRESENTACAO.md](APRESENTACAO.md)
 - **Submeter Entrega 3** → [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
 - **Entender a implementação** → [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md) + [GUIA_IMPLEMENTACAO.md](GUIA_IMPLEMENTACAO.md)

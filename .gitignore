@@ -11,7 +11,14 @@ build/
 # Environment variables
 .env
 # Runtime data (AI config with API keys)
-backend/data/
+**/backend/data/
+
+# Word lock files
+~$*
+**/~$*
+
+# OS / editor temp
+docs/~$*
 .env.local
 .env.development.local
 .env.test.local

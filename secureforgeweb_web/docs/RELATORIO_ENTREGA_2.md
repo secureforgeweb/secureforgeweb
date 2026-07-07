@@ -76,7 +76,7 @@ A trilha AppHardener orienta o desenvolvimento de ferramentas para **diagnóstic
 |---|---|
 | Nome comercial / interface | **SecureForge Web** |
 | Codinome acadêmico (AVA) | **AppHardener** — Trilha 1 |
-| Repositório / pacote | `secure_forge_web` / [github.com/margefson/secureforgeweb](https://github.com/margefson/secureforgeweb) |
+| Repositório / pacote | `secureforgeweb_web` / [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
 
 ---
 
@@ -453,7 +453,7 @@ pnpm dev
 
 | Item | Valor |
 |---|---|
-| **Repositório SecureForge Web** | https://github.com/margefson/secureforgeweb |
+| **Repositório SecureForge Web** | https://github.com/secureforgeweb/secureforgeweb |
 | **Entrega anterior** | [RELATORIO_ENTREGA.md](./RELATORIO_ENTREGA.md) — Entrega 1 (15/06/2026) |
 
 Documentação complementar:

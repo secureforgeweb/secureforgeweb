@@ -1,6 +1,6 @@
 # SecureForge Web — Identidade visual
 
-**Repositório:** https://github.com/margefson/secureforgeweb
+**Repositório:** https://github.com/secureforgeweb/secureforgeweb
 
 ## Nome do projeto
 

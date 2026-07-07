@@ -170,7 +170,7 @@ def build() -> Document:
         "trechos de código, headers HTTP e resumos de varredura, persistidos para revisão "
         "posterior e exportação."
     )
-    add_body(doc, "¹https://github.com/margefson/secureforgeweb", italic=True)
+    add_body(doc, "¹https://github.com/secureforgeweb/secureforgeweb", italic=True)
 
     add_heading(doc, "2. Arquitetura da SecureForge Web", level=1)
     add_body(
@@ -328,7 +328,7 @@ def build() -> Document:
         "de desenvolvimento local, com PostgreSQL 16 em contêiner Docker, Node.js 20+ e "
         "pnpm como gerenciador de pacotes. A máquina hospedeira dispõe de processador "
         "Intel Core i7, 16 GB de RAM e SSD. O repositório público "
-        "github.com/margefson/secureforgeweb foi cadastrado como alvo, com URL base "
+        "github.com/secureforgeweb/secureforgeweb foi cadastrado como alvo, com URL base "
         "http://localhost:5173 para avaliação HTTP."
     )
     add_body(

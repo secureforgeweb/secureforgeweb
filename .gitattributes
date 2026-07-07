@@ -1,0 +1,2 @@
+# Optional Git LFS patterns (enable when storing large binaries in this repo)
+# secureforgeweb_web/docs/**/*.zip filter=lfs diff=lfs merge=lfs -text

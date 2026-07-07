@@ -174,7 +174,7 @@ Seguir [DEMO.md](DEMO.md) — Portal Acadêmico Lab (~18–22 min)
 - Governança admin e benchmark visual
 - Próximos passos: vídeo demo, CI/CD, metadados IA no banco, entrega final
 
-**Repositório:** https://github.com/margefson/secureforgeweb
+**Repositório:** https://github.com/secureforgeweb/secureforgeweb
 
 ---
 

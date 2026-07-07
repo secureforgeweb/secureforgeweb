@@ -59,7 +59,7 @@ A trilha AppHardener orienta o desenvolvimento de ferramentas para **diagnóstic
 |---|---|
 | Nome comercial / interface | **SecureForge Web** |
 | Codinome acadêmico (AVA) | **AppHardener** — Trilha 1 |
-| Repositório / pacote | `secure_forge_web` / [github.com/margefson/secureforgeweb](https://github.com/margefson/secureforgeweb) |
+| Repositório / pacote | `secureforgeweb_web` / [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
 
 O nome reflete o propósito central: avaliar e melhorar a **postura de segurança** de aplicações web de forma proativa e orientada à correção.
 
@@ -369,7 +369,7 @@ As telas em funcionamento podem ser demonstradas em:
 
 | Item | Valor |
 |---|---|
-| **Repositório SecureForge Web** | https://github.com/margefson/secureforgeweb |
+| **Repositório SecureForge Web** | https://github.com/secureforgeweb/secureforgeweb |
 
 Documentação complementar no repositório:
 

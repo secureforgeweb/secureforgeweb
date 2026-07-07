@@ -49,14 +49,14 @@ const secureForgeLikeSnapshot: GitRepositorySnapshot = {
 
 describe("gitRepoAssessor — normalizeGitRepositoryUrl", () => {
   it("normaliza URL GitHub HTTPS", () => {
-    expect(normalizeGitRepositoryUrl("https://github.com/fluxtrace/fluxtrace")).toBe(
-      "https://github.com/fluxtrace/fluxtrace.git"
+    expect(normalizeGitRepositoryUrl("https://github.com/secureforgeweb/secureforgeweb")).toBe(
+      "https://github.com/secureforgeweb/secureforgeweb.git"
     );
   });
 
   it("normaliza owner/repo curto", () => {
-    expect(normalizeGitRepositoryUrl("fluxtrace/fluxtrace")).toBe(
-      "https://github.com/fluxtrace/fluxtrace.git"
+    expect(normalizeGitRepositoryUrl("secureforgeweb/secureforgeweb")).toBe(
+      "https://github.com/secureforgeweb/secureforgeweb.git"
     );
   });
 
