@@ -2,7 +2,7 @@
 
 Roteiro para apresentação acadêmica da **Entrega 3** (~18–22 minutos). Use uma aplicação de laboratório fictícia ou um repositório público real para as análises automáticas.
 
-Relatório desta entrega: [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+Relatório desta entrega: [RELATORIO.md](RELATORIO.md)
 
 ---
 
@@ -60,7 +60,7 @@ Ambos analisam a **mesma URL base** (aplicações distintas ou mesma app, confor
 
 ### 1. Landing e contexto (2 min)
 
-- Abrir `/` — apresentar proposta da Trilha 1 **AppHardener**
+- Abrir `/` — apresentar proposta **AppHardener**
 - Destacar o fluxo consolidado: **config IA pessoal → aplicação → checklist → achados → postura → PDF**
 - Fazer **login** e mostrar o menu: Dashboard, Aplicações, Postura de Segurança
 
@@ -141,7 +141,7 @@ Ambos analisam a **mesma URL base** (aplicações distintas ou mesma app, confor
 
 - Reforçar: fluxo principal funcional, multiusuário, revisão humana, OWASP/ASVS
 - Mencionar admin: usuários, checklist OWASP, análises globais
-- Referência: [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+- Referência: [RELATORIO.md](RELATORIO.md)
 
 ---
 
@@ -208,4 +208,4 @@ Ambos analisam a **mesma URL base** (aplicações distintas ou mesma app, confor
 | PDF não baixa | Verifique permissões de download do navegador |
 | Admin não vê todas as apps | Confirme papel `admin` em `/admin/users` |
 
-Apresentação em slides: [APRESENTACAO.md](APRESENTACAO.md) · Manual completo: [MANUAL.md](MANUAL.md) · Relatório: [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+Apresentação em slides: [APRESENTACAO.md](APRESENTACAO.md) · Manual completo: [MANUAL.md](MANUAL.md) · Relatório: [RELATORIO.md](RELATORIO.md)

@@ -73,7 +73,7 @@ Ficheiros em **`docs/`**:
 | [`docs/MANUAL.md`](docs/MANUAL.md) | Utilizadores — fluxo completo |
 | [`docs/DEMO.md`](docs/DEMO.md) | Demonstração (~18–22 min) |
 | [`docs/APRESENTACAO.md`](docs/APRESENTACAO.md) | Roteiro de slides |
-| [`docs/RELATORIO_ENTREGA_3.md`](docs/RELATORIO_ENTREGA_3.md) | Relatório Entrega 3 (estado atual) |
+| [`docs/RELATORIO.md`](docs/RELATORIO.md) | Relatório (estado atual) |
 | [`docs/BRAND.md`](docs/BRAND.md) | Identidade visual |
 | [`docs/README.md`](docs/README.md) | Índice completo |
 
@@ -155,7 +155,7 @@ pnpm test
 
 Protótipo funcional: cadastro → wizard OWASP (24 itens / 9 categorias) → achados → dashboard → PDF; IA por utilizador; admin com análises globais e gráfico comparativo.
 
-Detalhes: [`docs/RELATORIO_ENTREGA_3.md`](docs/RELATORIO_ENTREGA_3.md).
+Detalhes: [`docs/RELATORIO.md`](docs/RELATORIO.md).
 
 ---
 

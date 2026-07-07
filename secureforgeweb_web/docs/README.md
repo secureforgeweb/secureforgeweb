@@ -1,6 +1,6 @@
 # Documentação — SecureForge Web
 
-Índice da documentação do projeto **SecureForge Web** (Trilha 1 — AppHardener).
+Índice da documentação do projeto **SecureForge Web** (AppHardener).
 
 **Estado atual:** Entrega 3 (30/06/2026) — fluxo principal consolidado.
 
@@ -9,9 +9,7 @@
 | [MANUAL.md](MANUAL.md) | Usuários | Manual de uso (fluxo completo + admin) |
 | [DEMO.md](DEMO.md) | Apresentação | Roteiro de demonstração (~18–22 min) |
 | [APRESENTACAO.md](APRESENTACAO.md) | Banca / slides | Roteiro de slides Entrega 3 |
-| [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md) | Acadêmico | **Relatório Entrega 3** — estado atual |
-| [RELATORIO_ENTREGA_2.md](RELATORIO_ENTREGA_2.md) | Acadêmico | Relatório Entrega 2 — base estrutural |
-| [RELATORIO_ENTREGA.md](RELATORIO_ENTREGA.md) | Acadêmico | Relatório Entrega 1 — planejamento |
+| [RELATORIO.md](RELATORIO.md) | Acadêmico | **Relatório** — estado atual |
 | [GUIA_IMPLEMENTACAO.md](GUIA_IMPLEMENTACAO.md) | Desenvolvedores | Cronograma, fases e reaproveitamento |
 | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Acadêmico | Arquitetura alvo e requisitos |
 | [BRAND.md](BRAND.md) | Design | Identidade visual e logo |
@@ -21,8 +19,8 @@
 - **Usar o sistema** → [MANUAL.md](MANUAL.md)
 - **Subir localmente** → [`readme-web.md`](../readme-web.md) ou [`README.md`](../../README.md) na raiz do repositório
 - **Demonstrar na banca** → [DEMO.md](DEMO.md) + [APRESENTACAO.md](APRESENTACAO.md)
-- **Submeter Entrega 3** → [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
-- **Entender a implementação** → [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md) + [GUIA_IMPLEMENTACAO.md](GUIA_IMPLEMENTACAO.md)
+- **Submeter Entrega 3** → [RELATORIO.md](RELATORIO.md)
+- **Entender a implementação** → [RELATORIO.md](RELATORIO.md) + [GUIA_IMPLEMENTACAO.md](GUIA_IMPLEMENTACAO.md)
 
 ## Status do projeto
 
@@ -48,12 +46,12 @@
 | Migrações `0015` (config IA) e `0016` (registro de runs) |
 | Tabela com filtros por coluna e comparação gráfica |
 
-Detalhes: [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+Detalhes: [RELATORIO.md](RELATORIO.md)
 
 ## Histórico de entregas
 
 | Entrega | Data | Documento | Foco |
 |---|---|---|---|
-| 1 | 15/06/2026 | [RELATORIO_ENTREGA.md](RELATORIO_ENTREGA.md) | Planejamento e arquitetura |
-| 2 | 16/06/2026 | [RELATORIO_ENTREGA_2.md](RELATORIO_ENTREGA_2.md) | Base funcional mínima |
-| 3 | 30/06/2026 | [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md) | Fluxo principal consolidado |
+| 1 | 15/06/2026 | [RELATORIO.md](RELATORIO.md) | Planejamento e arquitetura |
+| 2 | 16/06/2026 | [RELATORIO.md](RELATORIO.md) | Base funcional mínima |
+| 3 | 30/06/2026 | [RELATORIO.md](RELATORIO.md) | Fluxo principal consolidado |

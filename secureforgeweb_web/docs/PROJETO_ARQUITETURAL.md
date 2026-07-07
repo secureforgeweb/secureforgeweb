@@ -1,11 +1,11 @@
 # Projeto Arquitetural — AppHardener
 
 **Disciplina:** Projeto Integrador — Desenvolvimento de Ferramentas de Segurança Aplicada  
-**Trilha:** 1 — AppHardener  
+**Trilha:** AppHardener  
 **Versão:** 1.2  
 **Data:** 30/06/2026
 
-> Para o **estado operacional atual** (Entrega 3), consulte [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md), [MANUAL.md](MANUAL.md) e [DEMO.md](DEMO.md). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark e migrações `0015`–`0016`.
+> Para o **estado operacional atual** (Entrega 3), consulte [RELATORIO.md](RELATORIO.md), [MANUAL.md](MANUAL.md) e [DEMO.md](DEMO.md). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark e migrações `0015`–`0016`.
 
 ---
 
@@ -623,7 +623,7 @@ Alinhado à disciplina com entregas parciais:
 
 ## 18. Conclusão
 
-O AppHardener, conforme definido neste projeto arquitetural, atende ao perfil da Trilha 1: uma ferramenta **leve, guiada e orientada à correção** para diagnóstico e hardening de aplicações web. A arquitetura em camadas, o modelo de domínio centrado em aplicação–análise–achado–recomendação e o catálogo de checklist alinhado ao módulo de Segurança Aplicada garantem coerência acadêmica e viabilidade de implementação por uma equipe de até quatro integrantes.
+O AppHardener, conforme definido neste projeto arquitetural, atende ao perfil esperado: uma ferramenta **leve, guiada e orientada à correção** para diagnóstico e hardening de aplicações web. A arquitetura em camadas, o modelo de domínio centrado em aplicação–análise–achado–recomendação e o catálogo de checklist alinhado ao módulo de Segurança Aplicada garantem coerência acadêmica e viabilidade de implementação por uma equipe de até quatro integrantes.
 
 O protótipo resultante será **demonstrável, útil em contextos reais de pequena escala** e com caminho claro de evolução, sem competir com scanners ou plataformas enterprise.
 

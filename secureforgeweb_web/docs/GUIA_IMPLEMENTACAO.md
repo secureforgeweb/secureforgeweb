@@ -1,7 +1,7 @@
 # Guia de Implementação — SecureForge Web
 
 **Disciplina:** Projeto Integrador — Desenvolvimento de Ferramentas de Segurança Aplicada  
-**Trilha:** 1 — AppHardener  
+**Trilha:** AppHardener  
 **Projeto base de referência:** [incident_security_system](https://github.com/margefson/incident_security_system) (Projeto 1)  
 **Versão:** 1.2  
 **Data:** 30/06/2026
@@ -10,7 +10,7 @@
 
 ## Estado atual do sistema (referência rápida)
 
-> Este guia documenta o **cronograma histórico** de implementação. Para o **estado operacional atual (Entrega 3)**, consulte [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md), [MANUAL.md](MANUAL.md) e [DEMO.md](DEMO.md).
+> Este guia documenta o **cronograma histórico** de implementação. Para o **estado operacional atual (Entrega 3)**, consulte [RELATORIO.md](RELATORIO.md), [MANUAL.md](MANUAL.md) e [DEMO.md](DEMO.md).
 
 | Capacidade | Status |
 |---|---|
@@ -27,7 +27,7 @@
 
 **Comandos:** `pnpm db:setup` · `pnpm dev` · `pnpm test` · `pnpm check`
 
-**Demonstração:** [DEMO.md](DEMO.md) · **Relatório:** [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+**Demonstração:** [DEMO.md](DEMO.md) · **Relatório:** [RELATORIO.md](RELATORIO.md)
 
 ---
 
@@ -38,7 +38,7 @@
 | Aspecto | Definição |
 |---|---|
 | **Nome comercial / tema** | **PosturaWeb** — *Plataforma de Diagnóstico e Hardening de Aplicações Web* |
-| **Codinome acadêmico** | **AppHardener** (nome oficial da Trilha 1 no AVA) |
+| **Codinome acadêmico** | **AppHardener** (nome oficial no AVA) |
 | **Sigla técnica** | `POSTURA_WEB` ou `PWEB` |
 
 ### Por que PosturaWeb?
@@ -57,7 +57,7 @@
 | **AppShield Review** | Combina proteção + revisão | Genérico, parece produto comercial |
 | **AppHardener** | Nome oficial da trilha | Soa técnico demais para usuário final |
 
-> **Decisão sugerida:** usar **PosturaWeb** na interface, documentação e apresentação; citar **AppHardener / Trilha 1** nos documentos acadêmicos e relatórios da disciplina.
+> **Decisão sugerida:** usar **PosturaWeb** na interface, documentação e apresentação; citar **AppHardener** nos documentos acadêmicos e relatórios da disciplina.
 
 ---
 
@@ -72,7 +72,7 @@ flowchart LR
         R1[Recomendação por categoria de ameaça]
     end
 
-    subgraph P2["PosturaWeb (Trilha 1)"]
+    subgraph P2["PosturaWeb"]
         A1[Aplicação cadastrada]
         CHK[Checklist guiado OWASP]
         ACH[Achados de hardening]
@@ -84,7 +84,7 @@ flowchart LR
     P1 -.->|Domínio diferente| P2
 ```
 
-| Dimensão | INCIDENT_SYS (Projeto 1) | PosturaWeb (Trilha 1) |
+| Dimensão | INCIDENT_SYS (Projeto 1) | PosturaWeb |
 |---|---|---|
 | **Problema** | Registrar e classificar incidentes de segurança | Diagnosticar e fortalecer aplicações web |
 | **Objeto central** | Incidente (`incidents`) | Aplicação + Análise + Achado |
@@ -148,7 +148,7 @@ Referência clonada em: `_ref/incident_security_system/`
 
 | Componente | Motivo da exclusão |
 |---|---|
-| **Pipeline ML** (`backend/ml/`, Flask :5001) | Trilha 1 não exige scanner/ML; checklist é guiado |
+| **Pipeline ML** (`backend/ml/`, Flask :5001) | AppHardener não exige scanner/ML; checklist é guiado |
 | **Treinamento ML** (`AdminML.tsx`, `AdminMLTraining.tsx`) | Domínio de classificação de ameaças, não hardening |
 | **SIEM / Wazuh** (`integrations/siem/`) | Integração de incidentes em tempo real |
 | **Tabela `incidents`** | Entidade de domínio diferente |
@@ -166,7 +166,7 @@ Referência clonada em: `_ref/incident_security_system/`
 
 Legenda: ✅ Existe no P1 (reaproveitável) · 🔄 Existe parcialmente · ❌ A desenvolver
 
-| ID | Requisito PosturaWeb (Trilha 1) | Status | Origem / Ação |
+| ID | Requisito PosturaWeb | Status | Origem / Ação |
 |---|---|---|---|
 | RF01 | Cadastro de aplicação/projeto | ❌ | Novo: tabela `applications`, CRUD, tela de cadastro |
 | RF02 | Checklist/formulário de análise | ❌ | Novo: tabelas `checklists`, `checklist_items`, `checklist_responses`, wizard UI |
@@ -297,7 +297,7 @@ incident_security_system  →  fork  →  posturaweb
 
 ### 6.2 O que fazer no Dia 1 (setup)
 
-1. Copiar/forkar o repositório para `trilha1/` (ou novo repo `posturaweb`).
+1. Copiar/forkar o repositório para `apphardener/` (ou novo repo `posturaweb`).
 2. Remover pastas: `backend/ml/`, `integrations/siem/`, views `AdminML*`, `Analyst*`.
 3. Renomear em `package.json`, `README.md`, títulos e `Home.tsx` → **PosturaWeb**.
 4. Atualizar `.env.example` e `docker-compose.yml` (DB: `posturaweb`).
@@ -422,7 +422,7 @@ incident_security_system  →  fork  →  posturaweb
 | 5.1 | Revisar requisitos de segurança (8 itens do P1 ainda aplicáveis) | `security.test.ts` verde |
 | 5.2 | Admin: gestão de itens de checklist (opcional) | `/admin/checklist-items` |
 | 5.3 | Notificações para achados críticos (opcional) | Reaproveitar `NotificationBell` |
-| 5.4 | Landing page e texto alinhados à Trilha 1 | `Home.tsx` |
+| 5.4 | Landing page e texto alinhados ao AppHardener | `Home.tsx` |
 | 5.5 | README PosturaWeb + manual de uso | `docs/MANUAL.md` |
 | 5.6 | Roteiro de demonstração (app de laboratório) | `docs/DEMO.md` |
 | 5.7 | Apresentação final + vídeo demo | Slides / gravação |
@@ -445,11 +445,11 @@ incident_security_system  →  fork  →  posturaweb
 | 6.4 | Tabela `analysis_assessment_runs` | Migração `0016` |
 | 6.5 | `admin.listAnalyses` — visão global | `/admin/analyses` |
 | 6.6 | Benchmark: filtros, resize, gráfico comparativo | `AdminAnalyses.tsx` |
-| 6.7 | Documentação Entrega 3 | `RELATORIO_ENTREGA_3.md`, `MANUAL.md`, `DEMO.md` |
+| 6.7 | Documentação Entrega 3 | `RELATORIO.md`, `MANUAL.md`, `DEMO.md` |
 
 **Critério de aceite:** Dois usuários com modelos IA distintos executam análises; admin compara postura em gráfico; fluxo principal demonstrável ponta a ponta.
 
-> **Status Fase 6:** Concluída em 30/06/2026. Ver [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md).
+> **Status Fase 6:** Concluída em 30/06/2026. Ver [RELATORIO.md](RELATORIO.md).
 
 ---
 
@@ -642,5 +642,5 @@ Itens a cadastrar na Fase 1 — alinhados ao `PROJETO_ARQUITETURAL.md`:
 
 - [PROJETO_ARQUITETURAL.md](./PROJETO_ARQUITETURAL.md) — Arquitetura alvo PosturaWeb
 - [incident_security_system](https://github.com/margefson/incident_security_system) — Projeto 1 (base de código)
-- Trilha 1 — AppHardener (AVA)
+- AppHardener (AVA)
 - OWASP Top 10 · OWASP ASVS · OWASP Cheat Sheet Series

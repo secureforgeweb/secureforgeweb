@@ -317,7 +317,7 @@ export default function Login() {
         )}
 
         <p className="text-center lg:text-left text-sm text-muted-foreground mt-5">
-          Projeto Integrador · Trilha 1 AppHardener · SecureForge Web
+          Projeto Integrador · AppHardener · SecureForge Web
         </p>
         </div>
       </div>

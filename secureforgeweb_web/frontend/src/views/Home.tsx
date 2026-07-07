@@ -102,7 +102,7 @@ export default function Home() {
             <div className="space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-sm font-mono text-primary">
                 <ClipboardCheck className="w-4 h-4" />
-                Trilha 1 — AppHardener
+                AppHardener
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold font-mono text-foreground leading-tight">
                 Diagnóstico e Hardening<br />
@@ -181,7 +181,7 @@ export default function Home() {
 
       <footer className="border-t border-border px-4 sm:px-6 lg:px-8 py-5">
         <div className={`${LANDING_SHELL} text-sm font-mono text-muted-foreground`}>
-          SecureForge Web · Projeto Integrador · Segurança Aplicada · Trilha 1 AppHardener
+          SecureForge Web · Projeto Integrador · Segurança Aplicada · AppHardener
         </div>
       </footer>
     </div>

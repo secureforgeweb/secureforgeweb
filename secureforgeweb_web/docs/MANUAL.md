@@ -1,8 +1,8 @@
 # Manual de Uso — SecureForge Web
 
-Plataforma de diagnóstico e hardening de aplicações web (Trilha 1 — AppHardener).
+Plataforma de diagnóstico e hardening de aplicações web (AppHardener).
 
-Documentação da entrega atual: [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+Documentação da entrega atual: [RELATORIO.md](RELATORIO.md)
 
 ---
 
@@ -212,6 +212,5 @@ Admin pode abrir análises e aplicações de outros usuários (somente leitura o
 | Documento | Conteúdo |
 |---|---|
 | [DEMO.md](DEMO.md) | Roteiro de apresentação (~18–22 min) |
-| [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md) | Relatório técnico da Entrega 3 |
-| [RELATORIO_ENTREGA_2.md](RELATORIO_ENTREGA_2.md) | Relatório da Entrega 2 (base estrutural) |
+| [RELATORIO.md](RELATORIO.md) | Relatório técnico |
 | [APRESENTACAO.md](APRESENTACAO.md) | Roteiro de slides |

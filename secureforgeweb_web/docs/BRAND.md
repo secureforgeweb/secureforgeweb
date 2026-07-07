@@ -7,9 +7,9 @@
 | Uso | Valor |
 |---|---|
 | Nome exibido | **SecureForge Web** |
-| Pacote npm | `secure_forge_web` |
+| Pacote npm | `secureforgeweb_web` |
 | API service | `secure-forge-web-api` |
-| Trilha acadêmica | AppHardener (Trilha 1) |
+| Codinome do projeto | AppHardener |
 
 ## Tagline
 
@@ -29,8 +29,7 @@
 |---|---|
 | `frontend/public/icon.png` | Favicon, sidebar, telas de login/registro |
 | `frontend/public/logo.png` | Logo horizontal (documentação, README, apresentações) |
-| `assets/secure-forge-icon.png` | Cópia de referência do ícone gerado |
-| `assets/secure-forge-logo.png` | Cópia de referência do logo completo |
+| `docs/assets/github-avatar.png` | Avatar do perfil GitHub (`secureforgeweb`) |
 
 ## Componente React
 

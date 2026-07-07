@@ -76,7 +76,7 @@ secureforgeweb/                      ← repository root
 
 | Item | Role |
 |------|------|
-| **AppHardener / Trilha 1** | Academic integrator project — web application hardening and posture diagnosis. |
+| **AppHardener** | Academic integrator project — web application hardening and posture diagnosis. |
 | **SecureForge Web** (this repo) | **Web platform** for OWASP checklist workflows, automated checks, findings, dashboards, PDF export, and optional per-user LLM assistance. |
 
 > **Note:** When assessing **third-party URLs or Git repositories**, treat targets and fetched content as **untrusted**. Run sensitive assessments in isolated environments; never commit secrets or production credentials.
@@ -241,6 +241,6 @@ This README stays in **English** for international sharing. **Full guides in Por
 | [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) | End-user manual. |
 | [`secureforgeweb_web/docs/DEMO.md`](secureforgeweb_web/docs/DEMO.md) | Demonstration script (Entrega 3). |
 | [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | Documentation index. |
-| [`secureforgeweb_web/docs/RELATORIO_ENTREGA_3.md`](secureforgeweb_web/docs/RELATORIO_ENTREGA_3.md) | Current delivery report. |
+| [`secureforgeweb_web/docs/RELATORIO.md`](secureforgeweb_web/docs/RELATORIO.md) | Current delivery report. |
 
 Prefer updating the files above when operational details change.

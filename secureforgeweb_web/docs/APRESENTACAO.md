@@ -1,9 +1,9 @@
 # Apresentação — SecureForge Web
 
-Roteiro de slides para entrega acadêmica (Trilha 1 — AppHardener).  
+Roteiro de slides para entrega acadêmica (AppHardener).  
 Alinhado à **Entrega 3** — fluxo principal consolidado.
 
-Demonstração ao vivo: [DEMO.md](DEMO.md) · Relatório: [RELATORIO_ENTREGA_3.md](RELATORIO_ENTREGA_3.md)
+Demonstração ao vivo: [DEMO.md](DEMO.md) · Relatório: [RELATORIO.md](RELATORIO.md)
 
 ---
 
@@ -11,7 +11,7 @@ Demonstração ao vivo: [DEMO.md](DEMO.md) · Relatório: [RELATORIO_ENTREGA_3.m
 
 **SecureForge Web**  
 Diagnóstico e Hardening de Aplicações Web  
-Projeto Integrador · Segurança Aplicada · Trilha 1 — AppHardener  
+Projeto Integrador · Segurança Aplicada · AppHardener  
 **Entrega 3** — Fluxo principal consolidado
 
 ---
