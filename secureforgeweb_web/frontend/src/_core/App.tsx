@@ -4,6 +4,7 @@ import NotFound from "@/views/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ChecklistLocaleProvider } from "@/contexts/ChecklistLocaleContext";
 import Home from "@/views/Home";
 import Login from "@/views/Login";
 import Register from "@/views/Register";
@@ -56,10 +57,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark" switchable>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <ChecklistLocaleProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ChecklistLocaleProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

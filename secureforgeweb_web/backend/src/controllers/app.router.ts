@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { COOKIE_NAME } from "@shared/const";
+import { apiError } from "../../shared/apiErrors.js";
 import { getSessionCookieOptions } from "../_core/cookies.js";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc.js";
 import {
@@ -35,7 +36,21 @@ import {
   testAiAssistantConnection,
 } from "../services/aiAssistantConfig.js";
 import crypto from "crypto";
-import { registerSchema, loginSchema, createApplicationSchema, updateApplicationSchema, createAnalysisSchema, saveResponsesSchema, createFindingSchema, updateFindingSchema, updateFindingStatusSchema, listFindingsSchema, validateJoi, isPasswordValid } from "../lib/validation.js";
+import {
+  getRegisterSchema,
+  getLoginSchema,
+  getApplicationSchema,
+  getUpdateApplicationSchema,
+  getAnalysisSchema,
+  getSaveResponsesSchema,
+  getFindingSchema,
+  getUpdateFindingSchema,
+  getUpdateFindingStatusSchema,
+  getListFindingsSchema,
+  validateJoi,
+  isPasswordValid,
+} from "../lib/validation.js";
+import { throwApiError } from "../lib/trpcErrors.js";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { sdk } from "../_core/sdk.js";
@@ -48,7 +63,14 @@ import {
   deleteApplication,
   countApplicationsByUser,
 } from "../models/applications.db.js";
-import { getChecklistCatalog, updateChecklistItemById } from "../models/checklist.db.js";
+import { getChecklistCatalog, listAvailableChecklists, updateChecklistItemById } from "../models/checklist.db.js";
+import { syncAsvsCatalog } from "../services/asvsCatalog.js";
+import {
+  resolveItemDescription,
+  resolveItemTitle,
+  type ChecklistLocale,
+  isChecklistLocale,
+} from "../../shared/checklistLocale.js";
 import {
   createAnalysis,
   getAnalysisById,
@@ -78,27 +100,42 @@ import { generatePosturePdfBuffer } from "../services/pdf.js";
 import { recordAssessmentRun } from "../models/assessmentRuns.db.js";
 import { upsertAnalysisItemEvidence } from "../models/analysisItemEvidence.db.js";
 
-async function assertApplicationAccess(applicationId: number, userId: number, isAdmin: boolean) {
+async function assertApplicationAccess(
+  applicationId: number,
+  userId: number,
+  isAdmin: boolean,
+  locale: ChecklistLocale
+) {
   const app = await getApplicationById(applicationId);
   if (!app || (!isAdmin && app.userId !== userId)) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Aplicação não encontrada" });
+    throwApiError("NOT_FOUND", locale, "application.notFound");
   }
   return app;
 }
 
-async function assertAnalysisAccess(analysisId: number, userId: number, isAdmin: boolean) {
+async function assertAnalysisAccess(
+  analysisId: number,
+  userId: number,
+  isAdmin: boolean,
+  locale: ChecklistLocale
+) {
   const analysis = await getAnalysisById(analysisId);
   if (!analysis) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Análise não encontrada" });
+    throwApiError("NOT_FOUND", locale, "analysis.notFound");
   }
-  await assertApplicationAccess(analysis.applicationId, userId, isAdmin);
+  await assertApplicationAccess(analysis.applicationId, userId, isAdmin, locale);
   return analysis;
 }
 
-async function assertFindingAccess(findingId: number, userId: number, isAdmin: boolean) {
+async function assertFindingAccess(
+  findingId: number,
+  userId: number,
+  isAdmin: boolean,
+  locale: ChecklistLocale
+) {
   const finding = await getFindingById(findingId);
   if (!finding || (!isAdmin && finding.userId !== userId)) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Achado não encontrado" });
+    throwApiError("NOT_FOUND", locale, "finding.notFound");
   }
   return finding;
 }
@@ -108,13 +145,13 @@ const authRouter = router({
 
   register: publicProcedure
     .input(z.object({ name: z.string(), email: z.string(), password: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const validated = validateJoi<{ name: string; email: string; password: string }>(
-        registerSchema,
+        getRegisterSchema(ctx.locale),
         input
       );
       const existing = await getUserByEmail(validated.email);
-      if (existing) throw new TRPCError({ code: "CONFLICT", message: "Email já cadastrado" });
+      if (existing) throwApiError("CONFLICT", ctx.locale, "auth.emailTaken");
       const passwordHash = await bcrypt.hash(validated.password, 12);
       const openId = `local_${uuidv4()}`;
       const user = await createLocalUser({
@@ -129,13 +166,13 @@ const authRouter = router({
   login: publicProcedure
     .input(z.object({ email: z.string(), password: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const validated = validateJoi<{ email: string; password: string }>(loginSchema, input);
+      const validated = validateJoi<{ email: string; password: string }>(getLoginSchema(ctx.locale), input);
       const user = await getUserByEmail(validated.email);
       const DUMMY_HASH = "$2b$12$invalidhashfortimingneutralizationXXXXXXXXXXXXXXXXXXX";
       const hashToCompare = user?.passwordHash ?? DUMMY_HASH;
       const valid = await bcrypt.compare(validated.password, hashToCompare);
       if (!user || !user.passwordHash || !valid) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Credenciais inválidas" });
+        throwApiError("UNAUTHORIZED", ctx.locale, "auth.invalidCredentials");
       }
       await upsertUser({ openId: user.openId, lastSignedIn: new Date() });
       const token = await sdk.createSessionToken(user.openId, { name: user.name ?? "" });
@@ -178,31 +215,25 @@ const authRouter = router({
 
   validateResetToken: publicProcedure
     .input(z.object({ token: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const record = await getPasswordResetToken(input.token);
-      if (!record) return { valid: false, reason: "Token inválido" };
-      if (record.usedAt) return { valid: false, reason: "Token já utilizado" };
-      if (new Date() > record.expiresAt) return { valid: false, reason: "Token expirado" };
+      if (!record) return { valid: false, reason: apiError("auth.tokenInvalid", ctx.locale) };
+      if (record.usedAt) return { valid: false, reason: apiError("auth.tokenUsed", ctx.locale) };
+      if (new Date() > record.expiresAt) return { valid: false, reason: apiError("auth.tokenExpired", ctx.locale) };
       return { valid: true };
     }),
 
   confirmPasswordReset: publicProcedure
     .input(z.object({ token: z.string(), newPassword: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!isPasswordValid(input.newPassword)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "A senha não atende aos requisitos de segurança (mín. 8 caracteres, maiúscula, minúscula, número e caractere especial).",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "auth.passwordRequirements");
       }
       const record = await getPasswordResetToken(input.token);
-      if (!record) throw new TRPCError({ code: "BAD_REQUEST", message: "Token inválido" });
-      if (record.usedAt) throw new TRPCError({ code: "BAD_REQUEST", message: "Token já utilizado" });
+      if (!record) throwApiError("BAD_REQUEST", ctx.locale, "auth.tokenInvalid");
+      if (record.usedAt) throwApiError("BAD_REQUEST", ctx.locale, "auth.tokenUsed");
       if (new Date() > record.expiresAt) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Token expirado. Solicite uma nova redefinição.",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "auth.tokenExpired");
       }
       const hash = await bcrypt.hash(input.newPassword, 12);
       await resetPasswordWithToken(record.userId, hash, record.id);
@@ -218,17 +249,14 @@ const authRouter = router({
     .input(z.object({ currentPassword: z.string(), newPassword: z.string() }))
     .mutation(async ({ input, ctx }) => {
       if (!isPasswordValid(input.newPassword)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "A nova senha não atende aos requisitos de segurança (mín. 8 caracteres, maiúscula, minúscula, número e caractere especial).",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "auth.newPasswordRequirements");
       }
       const user = await getUserByEmail(ctx.user.email ?? "");
       if (!user || !user.passwordHash) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Usuário não possui senha local" });
+        throwApiError("BAD_REQUEST", ctx.locale, "auth.noLocalPassword");
       }
       const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
-      if (!valid) throw new TRPCError({ code: "UNAUTHORIZED", message: "Senha atual incorreta" });
+      if (!valid) throwApiError("UNAUTHORIZED", ctx.locale, "auth.wrongCurrentPassword");
       const hash = await bcrypt.hash(input.newPassword, 12);
       await resetUserPassword(ctx.user.id, hash);
       await clearMustChangePassword(ctx.user.id);
@@ -238,7 +266,7 @@ const authRouter = router({
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Acesso restrito a administradores" });
+    throwApiError("FORBIDDEN", ctx.locale, "auth.adminOnly");
   }
   return next({ ctx });
 });
@@ -255,7 +283,7 @@ const adminRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       if (input.userId === ctx.user.id) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Você não pode alterar seu próprio perfil" });
+        throwApiError("BAD_REQUEST", ctx.locale, "admin.cannotChangeOwnRole");
       }
       await updateUserRole(input.userId, input.role);
       return { success: true };
@@ -271,10 +299,7 @@ const adminRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       if (input.userId === ctx.user.id) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Use a página de perfil para editar seus próprios dados",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "admin.useProfileToEditSelf");
       }
       await updateUserInfo(input.userId, { name: input.name, email: input.email });
       return { success: true };
@@ -284,7 +309,7 @@ const adminRouter = router({
     .input(z.object({ userId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       if (input.userId === ctx.user.id) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Você não pode excluir sua própria conta" });
+        throwApiError("BAD_REQUEST", ctx.locale, "admin.cannotDeleteSelf");
       }
       await deleteUserById(input.userId);
       return { success: true };
@@ -294,17 +319,22 @@ const adminRouter = router({
     .input(z.object({ userId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       if (input.userId === ctx.user.id) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Use a página de perfil para alterar sua própria senha",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "admin.useProfileToChangePassword");
       }
       const hash = await bcrypt.hash("Security2026@", 12);
       await resetUserPassword(input.userId, hash);
       return { success: true };
     }),
 
-  listChecklistItems: adminProcedure.query(async () => getChecklistCatalog()),
+  listChecklistItems: adminProcedure
+    .input(z.object({ checklistId: z.number().optional() }).optional())
+    .query(async ({ input }) => getChecklistCatalog(input?.checklistId)),
+
+  listChecklists: adminProcedure.query(async () => listAvailableChecklists()),
+
+  syncAsvsCatalog: adminProcedure
+    .input(z.object({ force: z.boolean().optional() }).optional())
+    .mutation(async ({ input }) => syncAsvsCatalog({ force: input?.force })),
 
   listAnalyses: adminProcedure
     .input(
@@ -323,17 +353,19 @@ const adminRouter = router({
         id: z.number(),
         title: z.string().min(3).max(255).optional(),
         description: z.string().min(10).max(5000).optional(),
+        titlePt: z.string().min(3).max(255).optional(),
+        descriptionPt: z.string().min(10).max(5000).optional(),
         suggestedSeverity: z.enum(["critical", "high", "medium", "low"]).optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
       if (Object.keys(data).length === 0) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Nenhum campo para atualizar" });
+        throwApiError("BAD_REQUEST", ctx.locale, "admin.nothingToUpdate");
       }
       const updated = await updateChecklistItemById(id, data);
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Item de checklist não encontrado" });
+        throwApiError("NOT_FOUND", ctx.locale, "checklistItem.notFound");
       }
       return updated;
     }),
@@ -355,12 +387,20 @@ const aiAssistantRouter = router({
         enabled: z.boolean(),
       })
     )
-    .mutation(async ({ input, ctx }) =>
-      saveAiAssistantConfig({
-        ...input,
-        userId: ctx.user.id,
-      })
-    ),
+    .mutation(async ({ input, ctx }) => {
+      try {
+        return await saveAiAssistantConfig({
+          ...input,
+          userId: ctx.user.id,
+          locale: ctx.locale,
+        });
+      } catch (err) {
+        if (err instanceof Error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
+        }
+        throw err;
+      }
+    }),
 
   testConnection: protectedProcedure
     .input(
@@ -371,12 +411,20 @@ const aiAssistantRouter = router({
         baseUrl: z.string().max(500).optional(),
       })
     )
-    .mutation(async ({ input, ctx }) =>
-      testAiAssistantConnection({
-        userId: ctx.user.id,
-        ...input,
-      })
-    ),
+    .mutation(async ({ input, ctx }) => {
+      try {
+        return await testAiAssistantConnection({
+          userId: ctx.user.id,
+          locale: ctx.locale,
+          ...input,
+        });
+      } catch (err) {
+        if (err instanceof Error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
+        }
+        throw err;
+      }
+    }),
 });
 
 const notificationsRouter = router({
@@ -413,7 +461,7 @@ const applicationsRouter = router({
           repositoryUrl?: string | null;
           description?: string | null;
           techStack?: string | null;
-        }>(createApplicationSchema, input);
+        }>(getApplicationSchema(ctx.locale), input);
         return createApplication({
           userId: ctx.user.id,
           name: validated.name,
@@ -442,7 +490,7 @@ const applicationsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      return assertApplicationAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      return assertApplicationAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
     }),
 
   update: protectedProcedure
@@ -457,7 +505,7 @@ const applicationsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertApplicationAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      await assertApplicationAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const { id, ...rest } = input;
       const validated = validateJoi<{
         name?: string;
@@ -465,7 +513,7 @@ const applicationsRouter = router({
         repositoryUrl?: string | null;
         description?: string | null;
         techStack?: string | null;
-      }>(updateApplicationSchema, rest);
+      }>(getUpdateApplicationSchema(ctx.locale), rest);
       const updated = await updateApplication(id, ctx.user.id, {
         name: validated.name,
         baseUrl: validated.baseUrl ?? undefined,
@@ -477,7 +525,7 @@ const applicationsRouter = router({
         techStack: validated.techStack ?? undefined,
       });
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Aplicação não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "application.notFound");
       }
       return updated;
     }),
@@ -485,9 +533,9 @@ const applicationsRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      await assertApplicationAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      await assertApplicationAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const ok = await deleteApplication(input.id, ctx.user.id);
-      if (!ok) throw new TRPCError({ code: "NOT_FOUND", message: "Aplicação não encontrada" });
+      if (!ok) throwApiError("NOT_FOUND", ctx.locale, "application.notFound");
       return { success: true };
     }),
 
@@ -498,33 +546,46 @@ const applicationsRouter = router({
 });
 
 const checklistRouter = router({
-  catalog: protectedProcedure.query(async () => getChecklistCatalog()),
+  listAvailable: protectedProcedure.query(async () => listAvailableChecklists()),
+
+  catalog: protectedProcedure
+    .input(z.object({ checklistId: z.number().optional() }).optional())
+    .query(async ({ input }) => getChecklistCatalog(input?.checklistId)),
 });
 
 const analysesRouter = router({
   create: protectedProcedure
-    .input(z.object({ applicationId: z.number(), title: z.string().optional() }))
+    .input(
+      z.object({
+        applicationId: z.number(),
+        title: z.string().optional(),
+        checklistId: z.number().optional(),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
-      const validated = validateJoi<{ applicationId: number; title?: string }>(
-        createAnalysisSchema,
-        input
-      );
+      const validated = validateJoi<{
+        applicationId: number;
+        title?: string;
+        checklistId?: number;
+      }>(getAnalysisSchema(ctx.locale), input);
       await assertApplicationAccess(
         validated.applicationId,
         ctx.user.id,
-        ctx.user.role === "admin"
+        ctx.user.role === "admin",
+        ctx.locale
       );
       return createAnalysis({
         applicationId: validated.applicationId,
         userId: ctx.user.id,
         title: validated.title,
+        checklistId: validated.checklistId,
       });
     }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      return assertAnalysisAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      return assertAnalysisAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
     }),
 
   listByApplication: protectedProcedure
@@ -533,7 +594,8 @@ const analysesRouter = router({
       await assertApplicationAccess(
         input.applicationId,
         ctx.user.id,
-        ctx.user.role === "admin"
+        ctx.user.role === "admin",
+        ctx.locale
       );
       return getAnalysesEnrichedByApplication(input.applicationId);
     }),
@@ -541,10 +603,10 @@ const analysesRouter = router({
   getWizard: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      await assertAnalysisAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      await assertAnalysisAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const state = await getAnalysisWizardState(input.id);
       if (!state) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Análise não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "analysis.notFound");
       }
       return state;
     }),
@@ -555,25 +617,25 @@ const analysesRouter = router({
         analysisId: z.number(),
         scope: z.enum(["http_headers", "git_repo", "ai_agent"]).default("http_headers"),
         itemIds: z.array(z.number()).optional(),
+        locale: z.enum(["en", "pt"]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const analysis = await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin");
+      const checklistLocale: ChecklistLocale =
+        input.locale && isChecklistLocale(input.locale) ? input.locale : ctx.locale;
+      const analysis = await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       if (analysis.status === "concluida") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Análise já concluída — não é possível executar nova avaliação automática.",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "analysis.alreadyCompleted");
       }
 
       const application = await getApplicationById(analysis.applicationId);
       if (!application) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Aplicação não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "application.notFound");
       }
 
       const state = await getAnalysisWizardState(input.analysisId);
       if (!state) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Análise não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "analysis.notFound");
       }
 
       const itemIdFilter = input.itemIds?.length ? new Set(input.itemIds) : null;
@@ -582,22 +644,18 @@ const analysesRouter = router({
         : state.items;
 
       if (itemIdFilter && targetItems.length === 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Nenhum item válido selecionado para esta avaliação.",
-        });
+        throwApiError("BAD_REQUEST", ctx.locale, "assessment.noValidItems");
       }
 
-      const itemInputs = targetItems.map((item) => ({ id: item.id, code: item.code }));
+      const itemInputs = targetItems.map((item) => ({
+        id: item.id,
+        code: item.essentialCode ?? item.code,
+      }));
 
       try {
         if (input.scope === "http_headers") {
           if (!application.baseUrl?.trim()) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message:
-                "Cadastre a URL base da aplicação antes de executar a análise HTTP (editar aplicação → URL base).",
-            });
+            throwApiError("BAD_REQUEST", ctx.locale, "assessment.missingBaseUrl");
           }
 
           const { snapshot, suggestions } = await runHttpHeaderAssessment(application.baseUrl, itemInputs);
@@ -626,11 +684,7 @@ const analysesRouter = router({
 
         if (input.scope === "git_repo") {
           if (!application.repositoryUrl?.trim()) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message:
-                "Cadastre a URL do repositório Git antes de executar a análise de código (editar aplicação → Repositório Git).",
-            });
+            throwApiError("BAD_REQUEST", ctx.locale, "assessment.missingRepoUrl");
           }
 
           const { snapshot, suggestions } = await runGitRepositoryAssessment(
@@ -663,18 +717,18 @@ const analysesRouter = router({
 
         if (input.scope === "ai_agent") {
           if (!application.baseUrl?.trim() && !application.repositoryUrl?.trim()) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message:
-                "Cadastre URL base e/ou repositório Git para o assistente IA.",
-            });
+            throwApiError("BAD_REQUEST", ctx.locale, "assessment.missingUrlsForAi");
           }
 
           const aiItemInputs = targetItems.map((item) => ({
             id: item.id,
             code: item.code,
-            title: item.title,
-            description: item.description,
+            essentialCode: item.essentialCode ?? null,
+            asvsId: item.asvsId ?? null,
+            verificationLevel: item.verificationLevel ?? null,
+            sectionName: item.sectionName ?? null,
+            title: resolveItemTitle(item, checklistLocale),
+            description: resolveItemDescription(item, checklistLocale),
           }));
 
           const { context, result: aiResult } = await runAiAgentAssessment({
@@ -714,12 +768,12 @@ const analysesRouter = router({
           };
         }
 
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Escopo de avaliação não suportado" });
+        throwApiError("BAD_REQUEST", ctx.locale, "assessment.unsupportedScope");
       } catch (err) {
         if (err instanceof TRPCError) throw err;
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : "Falha na avaliação automática",
+          message: err instanceof Error ? err.message : apiError("assessment.autoFailed", ctx.locale),
         });
       }
     }),
@@ -738,7 +792,7 @@ const analysesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin");
+      await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       try {
         const validated = validateJoi<{
           responses: Array<{
@@ -746,16 +800,22 @@ const analysesRouter = router({
             compliance: "conforme" | "parcial" | "nao_conforme" | "nao_aplicavel";
             notes?: string | null;
           }>;
-        }>(saveResponsesSchema, { responses: input.responses });
+        }>(getSaveResponsesSchema(ctx.locale), { responses: input.responses });
 
         const result = await saveAnalysisResponses(input.analysisId, validated.responses);
         if (!result) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Análise não encontrada" });
+          throwApiError("NOT_FOUND", ctx.locale, "analysis.notFound");
         }
         return result;
       } catch (err) {
+        if (err instanceof Error && err.message.startsWith("__invalid_checklist_item__:")) {
+          const itemId = err.message.split(":")[1] ?? "";
+          throwApiError("BAD_REQUEST", ctx.locale, "analysis.invalidChecklistItem", { itemId });
+        }
         if (err instanceof Error && err.message.startsWith("Item de checklist inválido")) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
+          throwApiError("BAD_REQUEST", ctx.locale, "analysis.invalidChecklistItem", {
+            itemId: err.message.split(": ")[1] ?? "",
+          });
         }
         throw err;
       }
@@ -764,15 +824,15 @@ const analysesRouter = router({
   complete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      const analysis = await assertAnalysisAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      const analysis = await assertAnalysisAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const state = await getAnalysisWizardState(input.id);
       if (!state) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Análise não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "analysis.notFound");
       }
       if (state.progress.answeredItems < state.progress.totalItems) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Responda todos os itens antes de concluir (${state.progress.answeredItems}/${state.progress.totalItems})`,
+        throwApiError("BAD_REQUEST", ctx.locale, "analysis.completeAllItems", {
+          answered: state.progress.answeredItems,
+          total: state.progress.totalItems,
         });
       }
       if (analysis.status === "concluida") {
@@ -785,10 +845,10 @@ const analysesRouter = router({
   dashboard: protectedProcedure
     .input(z.object({ applicationId: z.number() }))
     .query(async ({ input, ctx }) => {
-      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin");
+      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const data = await getApplicationDashboard(input.applicationId);
       if (!data) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Aplicação não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "application.notFound");
       }
       return data;
     }),
@@ -812,7 +872,7 @@ const findingsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const analysis = await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin");
+      const analysis = await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       try {
         const validated = validateJoi<{
           analysisId: number;
@@ -822,7 +882,7 @@ const findingsRouter = router({
           severity?: "critical" | "high" | "medium" | "low";
           priority?: "imediata" | "curto_prazo" | "medio_prazo" | "baixa";
           evidence?: string | null;
-        }>(createFindingSchema, input);
+        }>(getFindingSchema(ctx.locale), input);
 
         const severity = validated.severity ?? "medium";
         return createFinding(
@@ -839,7 +899,8 @@ const findingsRouter = router({
           ctx.user.id
         );
       } catch (err) {
-        if (err instanceof Error && !err.message.includes("inválid")) {
+        if (err instanceof TRPCError) throw err;
+        if (err instanceof Error) {
           throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
         }
         throw err;
@@ -849,7 +910,7 @@ const findingsRouter = router({
   generateFromAnalysis: protectedProcedure
     .input(z.object({ analysisId: z.number() }))
     .mutation(async ({ input, ctx }) => {
-      await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin");
+      await assertAnalysisAccess(input.analysisId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       return generateFindingsFromAnalysis(input.analysisId, ctx.user.id);
     }),
 
@@ -863,8 +924,8 @@ const findingsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin");
-      validateJoi(listFindingsSchema, input);
+      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
+      validateJoi(getListFindingsSchema(ctx.locale), input);
       const rows = await getFindingsByApplication(input.applicationId, {
         severity: input.severity,
         status: input.status,
@@ -879,7 +940,7 @@ const findingsRouter = router({
   stats: protectedProcedure
     .input(z.object({ applicationId: z.number() }))
     .query(async ({ input, ctx }) => {
-      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin");
+      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const total = await countFindingsByApplication(input.applicationId);
       return { total };
     }),
@@ -887,13 +948,13 @@ const findingsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      return assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      return assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
     }),
 
   getHistory: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      await assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      await assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       return getFindingHistory(input.id);
     }),
 
@@ -909,7 +970,7 @@ const findingsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      await assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const { id, ...rest } = input;
       const validated = validateJoi<{
         title?: string;
@@ -917,10 +978,10 @@ const findingsRouter = router({
         severity?: "critical" | "high" | "medium" | "low";
         evidence?: string | null;
         notes?: string | null;
-      }>(updateFindingSchema, rest);
+      }>(getUpdateFindingSchema(ctx.locale), rest);
       const updated = await updateFinding(id, ctx.user.id, validated);
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Achado não encontrado" });
+        throwApiError("NOT_FOUND", ctx.locale, "finding.notFound");
       }
       return updated;
     }),
@@ -934,9 +995,9 @@ const findingsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin");
+      await assertFindingAccess(input.id, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const validated = validateJoi<{ status: "aberto" | "em_correcao" | "resolvido" | "aceito_risco"; comment?: string | null }>(
-        updateFindingStatusSchema,
+        getUpdateFindingStatusSchema(ctx.locale),
         { status: input.status, comment: input.comment }
       );
       const updated = await updateFindingStatus(
@@ -946,7 +1007,7 @@ const findingsRouter = router({
         validated.comment
       );
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Achado não encontrado" });
+        throwApiError("NOT_FOUND", ctx.locale, "finding.notFound");
       }
       return updated;
     }),
@@ -961,10 +1022,10 @@ const reportsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin");
+      await assertApplicationAccess(input.applicationId, ctx.user.id, ctx.user.role === "admin", ctx.locale);
       const report = await getPostureReportData(input.applicationId, input.analysisId);
       if (!report) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Aplicação não encontrada" });
+        throwApiError("NOT_FOUND", ctx.locale, "application.notFound");
       }
 
       const { dashboard, findings, analysisTitle, analysisCompletedAt } = report;

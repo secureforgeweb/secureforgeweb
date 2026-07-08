@@ -1,6 +1,7 @@
 import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { throwApiError } from "../lib/trpcErrors.js";
 import type { TrpcContext } from "./context";
 
 const t = initTRPC.context<TrpcContext>().create({
@@ -50,7 +51,7 @@ export const analystProcedure = t.procedure.use(
     const { ctx, next } = opts;
 
     if (!ctx.user || (ctx.user.role !== 'security-analyst' && ctx.user.role !== 'admin')) {
-      throw new TRPCError({ code: "FORBIDDEN", message: "Apenas analistas de segurança ou administradores podem executar esta ação" });
+      throwApiError("FORBIDDEN", ctx.locale, "auth.analystOnly");
     }
 
     return next({

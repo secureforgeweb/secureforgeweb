@@ -10,7 +10,7 @@ import {
   applications,
   users,
 } from "../../drizzle/schema.js";
-import { getActiveChecklist, listChecklistCategories, listChecklistItems } from "./checklist.db.js";
+import { getDefaultChecklist, getChecklistById, listChecklistCategories, listChecklistItems } from "./checklist.db.js";
 import { deleteFindingsByAnalysisIds } from "./findings.db.js";
 import { getApplicationById } from "./applications.db.js";
 import { getAssessmentRunsForAnalyses } from "./assessmentRuns.db.js";
@@ -52,12 +52,16 @@ export async function createAnalysis(data: {
   applicationId: number;
   userId: number;
   title?: string;
+  checklistId?: number;
 }): Promise<Analysis> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const checklist = await getActiveChecklist();
-  if (!checklist) throw new Error("Nenhum checklist ativo encontrado");
+  const checklist = data.checklistId
+    ? await getChecklistById(data.checklistId)
+    : await getDefaultChecklist();
+  if (!checklist) throw new Error("Nenhum checklist disponível");
+  if (!checklist.isActive) throw new Error("Checklist selecionado não está ativo");
 
   const title =
     data.title?.trim() ||
@@ -439,8 +443,10 @@ export async function getAnalysisWizardState(analysisId: number) {
   const analysis = await getAnalysisById(analysisId);
   if (!analysis) return null;
 
+  const checklist = await getChecklistById(analysis.checklistId);
+
   const [categories, items, responses, application, itemEvidence] = await Promise.all([
-    listChecklistCategories(),
+    listChecklistCategories(analysis.checklistId),
     listChecklistItems(analysis.checklistId),
     getResponsesByAnalysis(analysisId),
     getApplicationById(analysis.applicationId),
@@ -465,6 +471,7 @@ export async function getAnalysisWizardState(analysisId: number) {
 
   return {
     analysis,
+    checklist: checklist ?? null,
     application: application
       ? {
           id: application.id,
@@ -497,7 +504,7 @@ export async function saveAnalysisResponses(
   const itemIds = new Set(items.map((i) => i.id));
   for (const r of responses) {
     if (!itemIds.has(r.itemId)) {
-      throw new Error(`Item de checklist inválido: ${r.itemId}`);
+      throw new Error(`__invalid_checklist_item__:${r.itemId}`);
     }
   }
 

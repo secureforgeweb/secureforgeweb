@@ -27,11 +27,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   type AssessmentEvidenceArtifact,
   type AssessmentScope,
-  SCOPE_LABELS,
   downloadDataUrl,
   exportEvidencePng,
   sortArtifactsForDisplay,
 } from "@/lib/assessmentEvidence";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
+import { useEnumLabels } from "@/i18n/useEnumLabels";
+import type { MessageKey } from "@/i18n/messages";
 
 export type SuggestionEvidenceEntry = {
   scope: AssessmentScope;
@@ -52,6 +54,8 @@ type SuggestionEvidenceDialogProps = {
   entries: SuggestionEvidenceEntry[];
 };
 
+type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
+
 const COMPLIANCE_STYLES: Record<string, string> = {
   conforme: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
   parcial: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
@@ -65,12 +69,7 @@ const SCOPE_ICONS: Record<AssessmentScope, typeof Globe> = {
   ai_agent: Brain,
 };
 
-function complianceLabel(value?: string) {
-  if (!value) return null;
-  return value.replace(/_/g, " ");
-}
-
-function CodeBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
+function CodeBlock({ artifact, t }: { artifact: AssessmentEvidenceArtifact; t: TranslateFn }) {
   const [copied, setCopied] = useState(false);
   const lines = artifact.content.split("\n");
 
@@ -86,7 +85,7 @@ function CodeBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
         <div className="flex items-center gap-2 min-w-0">
           <FileCode2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
           <span className="text-[11px] font-mono text-slate-300 truncate">
-            {artifact.filePath ?? "trecho detectado"}
+            {artifact.filePath ?? t("evidence.detectedSnippet")}
             {artifact.lineStart ? (
               <span className="text-cyan-400/80">
                 :{artifact.lineStart}
@@ -103,9 +102,13 @@ function CodeBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
           onClick={handleCopy}
         >
           {copied ? (
-            <><Check className="w-3 h-3 mr-1 text-emerald-400" /> Copiado</>
+            <>
+              <Check className="w-3 h-3 mr-1 text-emerald-400" /> {t("evidence.copied")}
+            </>
           ) : (
-            <><Copy className="w-3 h-3 mr-1" /> Copiar</>
+            <>
+              <Copy className="w-3 h-3 mr-1" /> {t("evidence.copy")}
+            </>
           )}
         </Button>
       </div>
@@ -130,7 +133,14 @@ function CodeBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
   );
 }
 
-function HttpHeadersBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
+function HttpHeadersBlock({
+  artifact,
+  t,
+}: {
+  artifact: AssessmentEvidenceArtifact;
+  t: TranslateFn;
+}) {
+  const presentMarker = t("evidence.present");
   const rows = artifact.content.split("\n\n").filter(Boolean);
 
   return (
@@ -142,7 +152,7 @@ function HttpHeadersBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }
       <div className="divide-y divide-border/40">
         {rows.map((row, i) => {
           const [headerLine, ...valueLines] = row.split("\n");
-          const isPresent = headerLine?.includes("[presente]");
+          const isPresent = headerLine?.includes(presentMarker) || headerLine?.includes("[presente]");
           const headerName = headerLine?.split("[")[0]?.trim() ?? headerLine;
           const value = valueLines.join("\n").replace(/^\s+/, "") || "—";
           return (
@@ -162,14 +172,21 @@ function HttpHeadersBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }
   );
 }
 
-function ScanSummaryBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
+function ScanSummaryBlock({
+  artifact,
+  t,
+}: {
+  artifact: AssessmentEvidenceArtifact;
+  t: TranslateFn;
+}) {
   const [open, setOpen] = useState(false);
+  const filesLabel = t("evidence.filesAnalyzed");
   const preview = useMemo(() => {
     const lines = artifact.content.split("\n").filter(Boolean);
-    const filesLine = lines.find((l) => l.includes("Arquivos analisados"));
-    const repoLine = lines.find((l) => l.startsWith("Repositório:"));
+    const filesLine = lines.find((l) => l.includes(filesLabel) || l.includes("Arquivos analisados"));
+    const repoLine = lines.find((l) => l.startsWith("Repositório:") || l.startsWith("Repository:"));
     return [repoLine, filesLine].filter(Boolean).join(" · ");
-  }, [artifact.content]);
+  }, [artifact.content, filesLabel]);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -181,7 +198,7 @@ function ScanSummaryBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }
           <div className="flex items-center gap-2 min-w-0">
             <ScanSearch className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <span className="text-xs font-mono text-muted-foreground truncate">
-              {preview || "Detalhes da varredura"}
+              {preview || t("evidence.scanDetails")}
             </span>
           </div>
           {open ? (
@@ -209,19 +226,23 @@ function TextBlock({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
   );
 }
 
-function ArtifactView({ artifact }: { artifact: AssessmentEvidenceArtifact }) {
-  if (artifact.kind === "code") return <CodeBlock artifact={artifact} />;
-  if (artifact.kind === "http_headers") return <HttpHeadersBlock artifact={artifact} />;
-  if (artifact.kind === "scan_summary") return <ScanSummaryBlock artifact={artifact} />;
+function ArtifactView({ artifact, t }: { artifact: AssessmentEvidenceArtifact; t: TranslateFn }) {
+  if (artifact.kind === "code") return <CodeBlock artifact={artifact} t={t} />;
+  if (artifact.kind === "http_headers") return <HttpHeadersBlock artifact={artifact} t={t} />;
+  if (artifact.kind === "scan_summary") return <ScanSummaryBlock artifact={artifact} t={t} />;
   return <TextBlock artifact={artifact} />;
 }
 
 function EvidenceEntryPanel({
   entry,
   onExport,
+  t,
+  labels,
 }: {
   entry: SuggestionEvidenceEntry;
   onExport: () => void;
+  t: TranslateFn;
+  labels: ReturnType<typeof useEnumLabels>;
 }) {
   const artifacts = sortArtifactsForDisplay(entry.artifacts ?? []);
   const primaryCode = artifacts.find((a) => a.kind === "code");
@@ -238,13 +259,13 @@ function EvidenceEntryPanel({
       >
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <ScopeIcon className="w-4 h-4 shrink-0 opacity-80" />
-          <span className="text-sm font-medium">{SCOPE_LABELS[entry.scope]}</span>
+          <span className="text-sm font-medium">{labels.scope(entry.scope)}</span>
           <Badge variant="secondary" className="font-mono text-[10px] h-5">
-            {entry.confidence}% confiança
+            {t("evidence.confidence", { percent: entry.confidence })}
           </Badge>
           {entry.compliance && (
-            <Badge variant="outline" className="font-mono text-[10px] h-5 capitalize">
-              {complianceLabel(entry.compliance)}
+            <Badge variant="outline" className="font-mono text-[10px] h-5">
+              {labels.compliance(entry.compliance)}
             </Badge>
           )}
         </div>
@@ -264,19 +285,19 @@ function EvidenceEntryPanel({
         <div className="space-y-2">
           <p className="text-xs font-mono text-primary flex items-center gap-1.5">
             <FileCode2 className="w-3.5 h-3.5" />
-            Trecho que sustenta a sugestão
+            {t("evidence.supportingSnippet")}
           </p>
-          <CodeBlock artifact={primaryCode} />
+          <CodeBlock artifact={primaryCode} t={t} />
         </div>
       )}
 
       {secondaryArtifacts.length > 0 && (
         <div className="space-y-3">
           {secondaryArtifacts.length === 1 && secondaryArtifacts[0].kind !== "scan_summary" ? null : (
-            <p className="text-xs font-mono text-muted-foreground">Contexto adicional</p>
+            <p className="text-xs font-mono text-muted-foreground">{t("evidence.additionalContext")}</p>
           )}
           {secondaryArtifacts.map((artifact, i) => (
-            <ArtifactView key={`${artifact.kind}-${i}`} artifact={artifact} />
+            <ArtifactView key={`${artifact.kind}-${i}`} artifact={artifact} t={t} />
           ))}
         </div>
       )}
@@ -290,7 +311,7 @@ function EvidenceEntryPanel({
           onClick={onExport}
         >
           <Download className="w-3.5 h-3.5 mr-1.5" />
-          Exportar PNG
+          {t("evidence.exportPng")}
         </Button>
       </div>
     </div>
@@ -304,6 +325,9 @@ export default function SuggestionEvidenceDialog({
   itemTitle,
   entries,
 }: SuggestionEvidenceDialogProps) {
+  const { t } = useLocale();
+  const labels = useEnumLabels();
+
   const sortedEntries = useMemo(
     () =>
       [...entries].sort((a, b) => {
@@ -325,6 +349,12 @@ export default function SuggestionEvidenceDialog({
       evidence: entry.evidence,
       rationale: entry.rationale,
       artifacts: entry.artifacts ?? [],
+      labels: {
+        header: t("evidence.pngHeader", { code: itemCode }),
+        scopeLine: `${labels.scope(entry.scope)} · ${t("evidence.confidence", { percent: entry.confidence })}`,
+        evidenceTitle: t("common.evidence"),
+        rationaleTitle: t("evidence.rationale"),
+      },
     });
     if (dataUrl) {
       downloadDataUrl(dataUrl, `evidencia-${itemCode}-${entry.scope}.png`);
@@ -337,7 +367,7 @@ export default function SuggestionEvidenceDialog({
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/50 shrink-0">
           <DialogTitle className="font-mono text-base flex items-center gap-2 pr-6">
             <FileSearch className="w-4 h-4 text-primary shrink-0" />
-            <span className="truncate">Evidência — {itemCode}</span>
+            <span className="truncate">{t("evidence.title", { code: itemCode })}</span>
           </DialogTitle>
           <DialogDescription className="text-sm">{itemTitle}</DialogDescription>
         </DialogHeader>
@@ -345,13 +375,13 @@ export default function SuggestionEvidenceDialog({
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-5 py-4">
             {sortedEntries.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                Nenhuma evidência registrada. Execute a análise HTTP, Git ou Assistente IA.
-              </p>
+              <p className="text-sm text-muted-foreground py-6 text-center">{t("evidence.empty")}</p>
             ) : sortedEntries.length === 1 ? (
               <EvidenceEntryPanel
                 entry={sortedEntries[0]}
                 onExport={() => handleExport(sortedEntries[0])}
+                t={t}
+                labels={labels}
               />
             ) : (
               <Tabs defaultValue={defaultTab} className="w-full">
@@ -365,7 +395,7 @@ export default function SuggestionEvidenceDialog({
                         className="font-mono text-xs flex-1 min-w-[7rem] gap-1.5"
                       >
                         <Icon className="w-3 h-3" />
-                        {SCOPE_LABELS[entry.scope].replace("Análise ", "").replace("Assistente ", "")}
+                        {labels.scopeShort(entry.scope)}
                       </TabsTrigger>
                     );
                   })}
@@ -375,6 +405,8 @@ export default function SuggestionEvidenceDialog({
                     <EvidenceEntryPanel
                       entry={entry}
                       onExport={() => handleExport(entry)}
+                      t={t}
+                      labels={labels}
                     />
                   </TabsContent>
                 ))}
@@ -385,7 +417,7 @@ export default function SuggestionEvidenceDialog({
 
         {sortedEntries.length > 0 && (
           <div className="px-5 py-2.5 border-t border-border/50 bg-muted/15 text-[10px] text-muted-foreground font-mono shrink-0">
-            Valide manualmente antes de confirmar a conformidade.
+            {t("evidence.validateManually")}
           </div>
         )}
       </DialogContent>
@@ -395,22 +427,24 @@ export default function SuggestionEvidenceDialog({
 
 export function EvidenceIconButton({
   onClick,
-  title = "Ver evidência da sugestão",
+  title,
 }: {
   onClick: () => void;
   title?: string;
 }) {
+  const { t } = useLocale();
+
   return (
     <Button
       type="button"
       variant="outline"
       size="sm"
       className="h-7 px-2 font-mono text-[10px] text-cyan-700 dark:text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10"
-      title={title}
+      title={title ?? t("evidence.viewSuggestion")}
       onClick={onClick}
     >
       <FileSearch className="w-3 h-3 mr-1" />
-      Evidência
+      {t("common.evidence")}
     </Button>
   );
 }

@@ -2,6 +2,8 @@ import {
   getUserAiAssistantConfigByUserId,
   upsertUserAiAssistantConfig,
 } from "../models/userAiAssistantConfig.db.js";
+import { apiError } from "../../shared/apiErrors.js";
+import type { ChecklistLocale } from "../../shared/checklistLocale.js";
 
 export const AI_PROVIDER_IDS = ["openai", "gemini", "azure_copilot", "custom"] as const;
 export type AiProviderId = (typeof AI_PROVIDER_IDS)[number];
@@ -218,19 +220,21 @@ export async function saveAiAssistantConfig(input: {
   model: string;
   baseUrl: string;
   enabled: boolean;
+  locale?: ChecklistLocale;
 }): Promise<AiAssistantPublicConfig> {
+  const locale = input.locale ?? "pt";
   const preset = getProviderPreset(input.provider);
   const model = input.model.trim() || preset.defaultModel;
   const baseUrl = (input.baseUrl.trim() || preset.baseUrl).replace(/\/$/, "");
 
   if (!baseUrl) {
-    throw new Error("Informe a URL base da API do provedor.");
+    throw new Error(apiError("ai.missingBaseUrl", locale));
   }
 
   const existing = await getUserAiAssistantConfigByUserId(input.userId);
   const apiKey = input.apiKey?.trim() || existing?.apiKey || "";
   if (input.enabled && !apiKey) {
-    throw new Error("Informe a chave de API para habilitar o assistente IA.");
+    throw new Error(apiError("ai.missingApiKey", locale));
   }
 
   await upsertUserAiAssistantConfig(input.userId, {
@@ -244,7 +248,7 @@ export async function saveAiAssistantConfig(input: {
   return getAiAssistantPublicConfig(input.userId);
 }
 
-export function formatLlmHttpError(status: number, body: string): string {
+export function formatLlmHttpError(status: number, body: string, locale: ChecklistLocale = "pt"): string {
   let apiMessage = "";
   try {
     const parsed = JSON.parse(body) as { error?: { message?: string; code?: string } };
@@ -254,27 +258,25 @@ export function formatLlmHttpError(status: number, body: string): string {
   }
 
   if (status === 401) {
-    return "Chave de API inválida ou expirada. Verifique a chave no painel do provedor e salve novamente.";
+    return apiError("ai.invalidApiKey", locale);
   }
   if (status === 403) {
-    return "Acesso negado pela API. Confirme permissões da chave e se o modelo está disponível na sua conta.";
+    return apiError("ai.accessDenied", locale);
   }
   if (status === 404) {
-    return "Endpoint ou modelo não encontrado. Revise a URL base e o nome do modelo.";
+    return apiError("ai.endpointNotFound", locale);
   }
   if (status === 429) {
-    return (
-      "Cota ou limite de uso excedido na conta do provedor (HTTP 429). " +
-      "Para OpenAI: adicione créditos em platform.openai.com/settings/organization/billing " +
-      "ou use outro provedor (ex.: Google Gemini) no seletor acima. " +
-      (apiMessage ? `Detalhe: ${apiMessage}` : "")
-    );
+    return apiError("ai.quotaExceeded", locale, apiMessage ? { detail: apiMessage } : undefined);
   }
   if (status >= 500) {
-    return `Serviço do provedor indisponível (HTTP ${status}). Tente novamente em alguns minutos.`;
+    return apiError("ai.providerUnavailable", locale, { status });
   }
 
-  return `Falha na API (HTTP ${status})${apiMessage ? `: ${apiMessage}` : ""}`;
+  return apiError("ai.apiFailed", locale, {
+    status,
+    ...(apiMessage ? { detail: apiMessage } : {}),
+  });
 }
 
 async function probeLlmConnection(input: {
@@ -313,7 +315,9 @@ export async function testAiAssistantConnection(input: {
   apiKey?: string;
   model?: string;
   baseUrl?: string;
+  locale?: ChecklistLocale;
 }): Promise<{ ok: boolean; message: string; model: string }> {
+  const locale = input.locale ?? "pt";
   const runtime = await getAiAssistantRuntimeConfig(input.userId);
   const provider = input.provider ?? runtime.provider;
   const preset = getProviderPreset(provider);
@@ -322,17 +326,17 @@ export async function testAiAssistantConnection(input: {
   const baseUrl = (input.baseUrl?.trim() || runtime.baseUrl || preset.baseUrl).replace(/\/$/, "");
 
   if (!apiKey) {
-    throw new Error("Chave de API não configurada.");
+    throw new Error(apiError("ai.apiKeyNotConfigured", locale));
   }
   if (!baseUrl) {
-    throw new Error("URL base da API não configurada.");
+    throw new Error(apiError("ai.baseUrlNotConfigured", locale));
   }
 
   const response = await probeLlmConnection({ baseUrl, apiKey, model, provider });
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(formatLlmHttpError(response.status, body));
+    throw new Error(formatLlmHttpError(response.status, body, locale));
   }
 
   return {

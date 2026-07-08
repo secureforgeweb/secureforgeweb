@@ -6,16 +6,18 @@ import PostureMetricsPanel, { downloadPdfBase64 } from "@/components/PostureMetr
 import { Globe, ArrowRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
+  const { t } = useLocale();
   const [exportingAppId, setExportingAppId] = useState<number | null>(null);
   const { data: global } = trpc.analyses.globalDashboard.useQuery();
 
   const exportPdf = trpc.reports.exportPdf.useMutation({
     onSuccess: (result) => {
       downloadPdfBase64(result.base64, result.filename);
-      toast.success(`Relatório exportado (${result.findingCount} achado(s))`);
+      toast.success(t("dashboard.reportExported", { count: result.findingCount }));
       setExportingAppId(null);
     },
     onError: (e) => {
@@ -28,10 +30,8 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="soc-page-title">Dashboard</h1>
-          <p className="soc-page-subtitle mt-1">
-            Visão consolidada da postura de segurança das suas aplicações
-          </p>
+          <h1 className="soc-page-title">{t("dashboard.title")}</h1>
+          <p className="soc-page-subtitle mt-1">{t("dashboard.subtitle")}</p>
         </div>
 
         <PostureMetricsPanel
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
         {global && global.applications.length > 0 && (
           <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-mono font-semibold text-foreground">Aplicações</h2>
+            <h2 className="text-sm font-mono font-semibold text-foreground">{t("dashboard.applications")}</h2>
             <div className="space-y-2">
               {global.applications.map((app) => (
                 <div
@@ -63,7 +63,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="text-xs font-mono text-muted-foreground">
-                      {app.openFindings} aberto(s)
+                      {t("dashboard.openFindings", { count: app.openFindings })}
                     </span>
                     {app.postureScore !== null && (
                       <span className="text-sm font-mono text-primary">{app.postureScore}%</span>
@@ -74,7 +74,7 @@ export default function Dashboard() {
                       className="font-mono text-xs h-7"
                       onClick={() => navigate(`/applications/${app.id}/dashboard`)}
                     >
-                      Dashboard
+                      {t("dashboard.title")}
                     </Button>
                     <Button
                       variant="ghost"
@@ -98,17 +98,15 @@ export default function Dashboard() {
 
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-mono font-semibold text-foreground">Cadastrar aplicação</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Registre uma aplicação web, execute o checklist e acompanhe a postura de segurança.
-            </p>
+            <p className="text-sm font-mono font-semibold text-foreground">{t("dashboard.registerApp")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("dashboard.registerAppDesc")}</p>
           </div>
           <Button
             variant="outline"
             className="font-mono text-xs shrink-0"
             onClick={() => navigate("/applications/new")}
           >
-            Nova aplicação <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            {t("dashboard.newApplication")} <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Button>
         </div>
       </div>

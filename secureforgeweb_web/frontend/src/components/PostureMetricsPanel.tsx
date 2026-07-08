@@ -15,19 +15,21 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Progress } from "@/components/ui/progress";
-
-const SEVERITY_CHART_CONFIG: ChartConfig = {
-  critical: { label: "Crítica", color: "#f87171" },
-  high: { label: "Alta", color: "#fb923c" },
-  medium: { label: "Média", color: "#facc15" },
-  low: { label: "Baixa", color: "#34d399" },
-};
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
+import type { MessageKey } from "@/i18n/messages";
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: "#f87171",
   high: "#fb923c",
   medium: "#facc15",
   low: "#34d399",
+};
+
+const SEVERITY_LABEL_KEYS: Record<string, MessageKey> = {
+  critical: "severity.critical",
+  high: "severity.high",
+  medium: "severity.medium",
+  low: "severity.low",
 };
 
 type SeverityItem = { severity: string; count: number };
@@ -67,11 +69,20 @@ export default function PostureMetricsPanel({
   findingsByCategory,
   checklistProgress,
 }: PostureMetricsProps) {
+  const { t } = useLocale();
+
+  const severityChartConfig: ChartConfig = {
+    critical: { label: t("severity.critical"), color: SEVERITY_COLORS.critical },
+    high: { label: t("severity.high"), color: SEVERITY_COLORS.high },
+    medium: { label: t("severity.medium"), color: SEVERITY_COLORS.medium },
+    low: { label: t("severity.low"), color: SEVERITY_COLORS.low },
+  };
+
   const severityData = findingsBySeverity
     .filter((s) => s.count > 0)
     .map((s) => ({
       severity: s.severity,
-      label: SEVERITY_CHART_CONFIG[s.severity]?.label ?? s.severity,
+      label: SEVERITY_LABEL_KEYS[s.severity] ? t(SEVERITY_LABEL_KEYS[s.severity]) : s.severity,
       count: s.count,
       fill: SEVERITY_COLORS[s.severity] ?? "#64748b",
     }));
@@ -91,24 +102,24 @@ export default function PostureMetricsPanel({
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-card border border-border rounded-xl p-5 col-span-2 md:col-span-1">
-          <p className="text-xs text-muted-foreground font-mono mb-2">Score de postura</p>
+          <p className="text-xs text-muted-foreground font-mono mb-2">{t("metrics.postureScore")}</p>
           <p className={`text-4xl font-bold font-mono ${scoreColor(postureScore)}`}>
             {postureScore !== null ? `${postureScore}%` : "—"}
           </p>
-          <p className="text-xs text-muted-foreground mt-2">Itens conformes + N/A</p>
+          <p className="text-xs text-muted-foreground mt-2">{t("metrics.postureScoreHint")}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
-          <p className="text-xs text-muted-foreground font-mono mb-2">Achados abertos</p>
+          <p className="text-xs text-muted-foreground font-mono mb-2">{t("metrics.openFindings")}</p>
           <p className="text-2xl font-bold font-mono text-orange-400">{openFindings}</p>
-          <p className="text-xs text-muted-foreground mt-1">de {totalFindings} total</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("metrics.ofTotal", { count: totalFindings })}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
-          <p className="text-xs text-muted-foreground font-mono mb-2">Taxa de resolução</p>
+          <p className="text-xs text-muted-foreground font-mono mb-2">{t("metrics.resolutionRate")}</p>
           <p className="text-2xl font-bold font-mono text-emerald-400">{resolutionRate}%</p>
-          <p className="text-xs text-muted-foreground mt-1">resolvidos + aceitos</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("metrics.resolutionHint")}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
-          <p className="text-xs text-muted-foreground font-mono mb-2">Checklist</p>
+          <p className="text-xs text-muted-foreground font-mono mb-2">{t("metrics.checklist")}</p>
           <p className="text-2xl font-bold font-mono text-foreground">
             {checklistProgress ? `${checklistPercent}%` : "—"}
           </p>
@@ -120,11 +131,11 @@ export default function PostureMetricsPanel({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-xl p-5">
-          <h3 className="text-sm font-mono font-semibold text-foreground mb-4">Achados por severidade</h3>
+          <h3 className="text-sm font-mono font-semibold text-foreground mb-4">{t("metrics.findingsBySeverity")}</h3>
           {severityData.length === 0 ? (
-            <p className="text-xs text-muted-foreground font-mono">Nenhum achado registrado.</p>
+            <p className="text-xs text-muted-foreground font-mono">{t("metrics.noFindings")}</p>
           ) : (
-            <ChartContainer config={SEVERITY_CHART_CONFIG} className="h-[220px] w-full">
+            <ChartContainer config={severityChartConfig} className="h-[220px] w-full">
               <BarChart data={severityData} layout="vertical" margin={{ left: 8, right: 8 }}>
                 <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                 <XAxis type="number" tickLine={false} axisLine={false} fontSize={10} />
@@ -148,17 +159,17 @@ export default function PostureMetricsPanel({
         </div>
 
         <div className="bg-card border border-border rounded-xl p-5">
-          <h3 className="text-sm font-mono font-semibold text-foreground mb-4">Achados por categoria</h3>
+          <h3 className="text-sm font-mono font-semibold text-foreground mb-4">{t("metrics.findingsByCategory")}</h3>
           {categoryData.length === 0 ? (
-            <p className="text-xs text-muted-foreground font-mono">Nenhum achado por categoria.</p>
+            <p className="text-xs text-muted-foreground font-mono">{t("metrics.noCategoryFindings")}</p>
           ) : (
-            <ChartContainer config={{ count: { label: "Achados", color: "#22d3ee" } }} className="h-[220px] w-full">
+            <ChartContainer config={{ count: { label: t("metrics.findingsLabel"), color: "#22d3ee" } }} className="h-[220px] w-full">
               <PieChart>
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
                       formatter={(value, _name, item) => [
-                        `${value} achado(s)`,
+                        t("metrics.findingsCount", { count: Number(value) }),
                         (item.payload as { fullName?: string }).fullName,
                       ]}
                     />

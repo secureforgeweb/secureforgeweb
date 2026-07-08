@@ -147,6 +147,18 @@ export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 // ─── PosturaWeb: Applications & Checklist ───────────────────────────────────
 export const severityEnum = pgEnum("severity", ["critical", "high", "medium", "low"]);
 
+export const checklistProfileEnum = pgEnum("checklist_profile", [
+  "essential",
+  "asvs_l1",
+  "asvs_l2",
+  "asvs_l3",
+  "asvs_full",
+]);
+
+export const checklistSourceEnum = pgEnum("checklist_source", ["local", "owasp_asvs"]);
+
+export const automationProfileEnum = pgEnum("automation_profile", ["http", "git", "ai", "manual"]);
+
 export const applications = pgTable("applications", {
   id: serial("id").primaryKey(),
   userId: integer("userId").notNull(),
@@ -164,39 +176,69 @@ export const applications = pgTable("applications", {
 export type Application = typeof applications.$inferSelect;
 export type InsertApplication = typeof applications.$inferInsert;
 
-export const checklistCategories = pgTable("checklist_categories", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull().unique(),
-  description: text("description"),
-  color: varchar("color", { length: 32 }).default("#22d3ee"),
-  sortOrder: integer("sortOrder").default(0).notNull(),
-  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
-});
-export type ChecklistCategory = typeof checklistCategories.$inferSelect;
-export type InsertChecklistCategory = typeof checklistCategories.$inferInsert;
-
 export const checklists = pgTable("checklists", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 150 }).notNull(),
   version: varchar("version", { length: 20 }).notNull(),
+  profile: checklistProfileEnum("profile").default("essential").notNull(),
+  source: checklistSourceEnum("source").default("local").notNull(),
+  sourceVersion: varchar("sourceVersion", { length: 20 }),
+  externalId: varchar("externalId", { length: 64 }),
   isActive: boolean("isActive").default(true).notNull(),
+  isDefault: boolean("isDefault").default(false).notNull(),
+  itemCount: integer("itemCount").default(0).notNull(),
+  syncedAt: timestamp("syncedAt", { mode: "date" }),
+  namePt: varchar("namePt", { length: 150 }),
   createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
 });
 export type Checklist = typeof checklists.$inferSelect;
 export type InsertChecklist = typeof checklists.$inferInsert;
 
-export const checklistItems = pgTable("checklist_items", {
-  id: serial("id").primaryKey(),
-  checklistId: integer("checklistId").notNull(),
-  categoryId: integer("categoryId").notNull(),
-  code: varchar("code", { length: 20 }).notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description").notNull(),
-  owaspRef: varchar("owaspRef", { length: 100 }),
-  suggestedSeverity: severityEnum("suggestedSeverity").default("medium").notNull(),
-  sortOrder: integer("sortOrder").default(0).notNull(),
-  createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
-});
+export const checklistCategories = pgTable(
+  "checklist_categories",
+  {
+    id: serial("id").primaryKey(),
+    checklistId: integer("checklistId").references(() => checklists.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    color: varchar("color", { length: 32 }).default("#22d3ee"),
+    sortOrder: integer("sortOrder").default(0).notNull(),
+    chapterId: varchar("chapterId", { length: 10 }),
+    externalSectionId: varchar("externalSectionId", { length: 20 }),
+    namePt: varchar("namePt", { length: 100 }),
+    descriptionPt: text("descriptionPt"),
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [unique("checklist_categories_checklist_name_unique").on(table.checklistId, table.name)]
+);
+export type ChecklistCategory = typeof checklistCategories.$inferSelect;
+export type InsertChecklistCategory = typeof checklistCategories.$inferInsert;
+
+export const checklistItems = pgTable(
+  "checklist_items",
+  {
+    id: serial("id").primaryKey(),
+    checklistId: integer("checklistId").notNull(),
+    categoryId: integer("categoryId").notNull(),
+    code: varchar("code", { length: 32 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description").notNull(),
+    owaspRef: varchar("owaspRef", { length: 100 }),
+    asvsId: varchar("asvsId", { length: 32 }),
+    verificationLevel: integer("verificationLevel"),
+    sectionName: varchar("sectionName", { length: 255 }),
+    sectionNamePt: varchar("sectionNamePt", { length: 255 }),
+    automationProfile: automationProfileEnum("automationProfile"),
+    essentialCode: varchar("essentialCode", { length: 20 }),
+    externalSource: varchar("externalSource", { length: 32 }).default("local"),
+    titlePt: varchar("titlePt", { length: 255 }),
+    descriptionPt: text("descriptionPt"),
+    suggestedSeverity: severityEnum("suggestedSeverity").default("medium").notNull(),
+    sortOrder: integer("sortOrder").default(0).notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [unique("checklist_items_checklist_code_unique").on(table.checklistId, table.code)]
+);
 export type ChecklistItem = typeof checklistItems.$inferSelect;
 export type InsertChecklistItem = typeof checklistItems.$inferInsert;
 

@@ -83,7 +83,7 @@ const mockReport = {
 };
 
 function makeCtx(user: TrpcContext["user"]): TrpcContext {
-  return { user, req: {} as never, res: {} as never };
+  return { user, req: {} as never, res: {} as never, locale: "pt" as const };
 }
 
 describe("reports.exportPdf", () => {

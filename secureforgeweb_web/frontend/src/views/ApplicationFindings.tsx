@@ -12,19 +12,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, AlertTriangle, Filter } from "lucide-react";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
+import { useEnumLabels } from "@/i18n/useEnumLabels";
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: "border-red-400/30 text-red-400",
   high: "border-orange-400/30 text-orange-400",
   medium: "border-yellow-400/30 text-yellow-400",
   low: "border-emerald-400/30 text-emerald-400",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  aberto: "Aberto",
-  em_correcao: "Em correção",
-  resolvido: "Resolvido",
-  aceito_risco: "Aceito risco",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -34,17 +29,12 @@ const STATUS_COLORS: Record<string, string> = {
   aceito_risco: "text-muted-foreground",
 };
 
-const SEVERITY_LABELS: Record<string, string> = {
-  critical: "Crítica",
-  high: "Alta",
-  medium: "Média",
-  low: "Baixa",
-};
-
 export default function ApplicationFindings() {
   const [, navigate] = useLocation();
   const [, params] = useRoute("/applications/:id/findings");
   const applicationId = Number(params?.id);
+  const { t } = useLocale();
+  const labels = useEnumLabels();
 
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -85,7 +75,7 @@ export default function ApplicationFindings() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <p className="text-sm text-muted-foreground font-mono">Carregando achados...</p>
+        <p className="text-sm text-muted-foreground font-mono">{t("findings.loading")}</p>
       </DashboardLayout>
     );
   }
@@ -102,52 +92,52 @@ export default function ApplicationFindings() {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-foreground font-mono truncate">
-              Achados — {app?.name ?? "Aplicação"}
+              {t("findings.title", { name: app?.name ?? t("common.application") })}
             </h1>
-            <p className="text-xs text-muted-foreground font-mono">
-              Fragilidades identificadas nas análises de checklist
-            </p>
+            <p className="text-xs text-muted-foreground font-mono">{t("findings.subtitle")}</p>
           </div>
           <Badge variant="outline" className="font-mono text-xs shrink-0">
-            {findings?.length ?? 0} achado(s)
+            {t("findings.count", { count: findings?.length ?? 0 })}
           </Badge>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-4 flex flex-wrap gap-3 items-center">
           <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
             <Filter className="w-3.5 h-3.5" />
-            Filtros
+            {t("common.filters")}
           </div>
           <Select value={severityFilter} onValueChange={setSeverityFilter}>
             <SelectTrigger className="w-36 font-mono text-xs h-8">
-              <SelectValue placeholder="Severidade" />
+              <SelectValue placeholder={t("common.severity")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas severidades</SelectItem>
-              <SelectItem value="critical">Crítica</SelectItem>
-              <SelectItem value="high">Alta</SelectItem>
-              <SelectItem value="medium">Média</SelectItem>
-              <SelectItem value="low">Baixa</SelectItem>
+              <SelectItem value="all">{t("findings.allSeverities")}</SelectItem>
+              {labels.severityOptions().map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36 font-mono text-xs h-8">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("common.status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos status</SelectItem>
-              <SelectItem value="aberto">Aberto</SelectItem>
-              <SelectItem value="em_correcao">Em correção</SelectItem>
-              <SelectItem value="resolvido">Resolvido</SelectItem>
-              <SelectItem value="aceito_risco">Aceito risco</SelectItem>
+              <SelectItem value="all">{t("findings.allStatuses")}</SelectItem>
+              {labels.findingStatusOptions().map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-44 font-mono text-xs h-8">
-              <SelectValue placeholder="Categoria" />
+              <SelectValue placeholder={t("common.category")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas categorias</SelectItem>
+              <SelectItem value="all">{t("findings.allCategories")}</SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat.id} value={String(cat.id)}>
                   {cat.name}
@@ -160,16 +150,14 @@ export default function ApplicationFindings() {
         {!findings || findings.length === 0 ? (
           <div className="bg-card border border-border rounded-xl p-8 text-center space-y-3">
             <AlertTriangle className="w-8 h-8 text-muted-foreground/50 mx-auto" />
-            <p className="text-sm font-mono text-muted-foreground">Nenhum achado registrado ainda.</p>
-            <p className="text-xs text-muted-foreground">
-              Conclua uma análise de checklist para gerar achados automaticamente a partir de itens não conformes.
-            </p>
+            <p className="text-sm font-mono text-muted-foreground">{t("findings.empty")}</p>
+            <p className="text-xs text-muted-foreground">{t("findings.emptyDesc")}</p>
             <Button
               variant="outline"
               className="font-mono text-xs"
               onClick={() => navigate(`/applications/${applicationId}`)}
             >
-              Ir para a aplicação
+              {t("findings.goToApp")}
             </Button>
           </div>
         ) : (
@@ -186,7 +174,7 @@ export default function ApplicationFindings() {
                     {finding.itemCode && (
                       <span className="text-primary font-mono">{finding.itemCode} · </span>
                     )}
-                    {finding.categoryName ?? "Sem categoria"} · {finding.analysisTitle}
+                    {finding.categoryName ?? t("findings.noCategory")} · {finding.analysisTitle}
                   </p>
                   {finding.description && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{finding.description}</p>
@@ -197,10 +185,10 @@ export default function ApplicationFindings() {
                     variant="outline"
                     className={`font-mono text-xs ${SEVERITY_COLORS[finding.severity] ?? ""}`}
                   >
-                    {SEVERITY_LABELS[finding.severity] ?? finding.severity}
+                    {labels.severity(finding.severity)}
                   </Badge>
                   <span className={`text-xs font-mono ${STATUS_COLORS[finding.status] ?? ""}`}>
-                    {STATUS_LABELS[finding.status] ?? finding.status}
+                    {labels.findingStatus(finding.status)}
                   </span>
                 </div>
               </button>

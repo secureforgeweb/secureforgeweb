@@ -17,12 +17,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, Brain, Loader2, Zap } from "lucide-react";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
 type ProviderId = "openai" | "gemini" | "azure_copilot" | "custom";
 
 export default function AdminAiAssistant() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
+  const { t } = useLocale();
   const utils = trpc.useUtils();
   const backTo = location.startsWith("/admin") ? "/admin" : "/profile";
 
@@ -51,7 +53,7 @@ export default function AdminAiAssistant() {
     onSuccess: () => {
       utils.aiAssistant.getConfig.invalidate();
       setApiKey("");
-      toast.success("Sua configuração do assistente IA foi salva.");
+      toast.success(t("adminAi.saved"));
     },
     onError: (e) => toast.error(e.message),
   });
@@ -93,44 +95,41 @@ export default function AdminAiAssistant() {
           <div>
             <h1 className="text-xl font-bold text-foreground font-mono flex items-center gap-2">
               <Brain className="w-5 h-5 text-violet-500" />
-              Meu Assistente IA
+              {t("adminAi.title")}
             </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Configure o provedor de LLM usado nas suas análises automáticas do checklist.
-              Cada usuário possui configuração independente.
-            </p>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("adminAi.subtitle")}</p>
           </div>
         </div>
 
         {isLoading || !config ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground font-mono">
-            <Loader2 className="w-4 h-4 animate-spin" /> Carregando configuração...
+            <Loader2 className="w-4 h-4 animate-spin" /> {t("adminAi.loading")}
           </div>
         ) : (
           <>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="font-mono text-xs">
-                Conta: {user?.email ?? user?.name ?? "—"}
+                {t("common.account")}: {user?.email ?? user?.name ?? "—"}
               </Badge>
               {config.configured ? (
                 <Badge className="font-mono text-xs bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
-                  Ativo
+                  {t("common.active")}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="font-mono text-xs text-yellow-600 border-yellow-500/30">
-                  Heurístico local
+                  {t("adminAi.localHeuristic")}
                 </Badge>
               )}
               {config.apiKeyMasked && (
                 <Badge variant="outline" className="font-mono text-xs">
-                  Chave: {config.apiKeyMasked}
+                  {t("adminAi.keyMasked", { masked: config.apiKeyMasked })}
                 </Badge>
               )}
             </div>
 
             <form onSubmit={handleSave} className="bg-card border border-border rounded-xl p-5 space-y-5">
               <div className="space-y-2">
-                <Label className="text-xs font-mono">Provedor</Label>
+                <Label className="text-xs font-mono">{t("common.provider")}</Label>
                 <Select value={provider} onValueChange={(v) => applyPresetDefaults(v as ProviderId)}>
                   <SelectTrigger className="font-mono text-sm">
                     <SelectValue />
@@ -150,7 +149,7 @@ export default function AdminAiAssistant() {
 
               <div className="space-y-2">
                 <Label htmlFor="baseUrl" className="text-xs font-mono">
-                  URL base da API
+                  {t("adminAi.apiBaseUrl")}
                 </Label>
                 <Input
                   id="baseUrl"
@@ -160,15 +159,13 @@ export default function AdminAiAssistant() {
                   className="font-mono text-sm"
                 />
                 {provider === "azure_copilot" && (
-                  <p className="text-xs text-muted-foreground">
-                    Ex.: https://SEU-RECURSO.openai.azure.com/openai/deployments/SEU-DEPLOYMENT
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("adminAi.azureHint")}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="model" className="text-xs font-mono">
-                  Modelo
+                  {t("common.model")}
                 </Label>
                 <Input
                   id="model"
@@ -181,7 +178,7 @@ export default function AdminAiAssistant() {
 
               <div className="space-y-2">
                 <Label htmlFor="apiKey" className="text-xs font-mono">
-                  Chave de API
+                  {t("adminAi.apiKey")}
                 </Label>
                 <Input
                   id="apiKey"
@@ -190,7 +187,7 @@ export default function AdminAiAssistant() {
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder={
                     config.apiKeyMasked
-                      ? `Mantém ${config.apiKeyMasked} se deixar em branco`
+                      ? t("adminAi.keepKeyHint", { masked: config.apiKeyMasked })
                       : selectedPreset?.apiKeyHint
                   }
                   className="font-mono text-sm"
@@ -201,10 +198,8 @@ export default function AdminAiAssistant() {
 
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
-                  <p className="text-sm font-mono text-foreground">Habilitar assistente IA (LLM)</p>
-                  <p className="text-xs text-muted-foreground">
-                    Desligado usa apenas heurísticas locais no checklist.
-                  </p>
+                  <p className="text-sm font-mono text-foreground">{t("adminAi.enableLlm")}</p>
+                  <p className="text-xs text-muted-foreground">{t("adminAi.enableLlmDesc")}</p>
                 </div>
                 <Switch checked={enabled} onCheckedChange={setEnabled} />
               </div>
@@ -213,10 +208,10 @@ export default function AdminAiAssistant() {
                 <Button type="submit" className="font-mono" disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Salvando...
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t("common.saving")}
                     </>
                   ) : (
-                    "Salvar configuração"
+                    t("adminAi.saveConfig")
                   )}
                 </Button>
                 <Button
@@ -235,30 +230,22 @@ export default function AdminAiAssistant() {
                 >
                   {testMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Testando...
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t("adminAi.testing")}
                     </>
                   ) : (
                     <>
-                      <Zap className="w-4 h-4 mr-2" /> Testar conexão
+                      <Zap className="w-4 h-4 mr-2" /> {t("adminAi.testConnection")}
                     </>
                   )}
                 </Button>
               </div>
             </form>
 
-            <p className="text-xs text-muted-foreground font-mono leading-relaxed">
-              A configuração fica vinculada à sua conta e não é compartilhada com outros usuários.
-              A chave nunca é exibida por completo após o salvamento.
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Se o teste retornar <strong className="font-normal text-foreground">HTTP 429</strong>, a
-              conexão está correta, mas a conta do provedor está sem crédito ou cota. Adicione billing na
-              OpenAI ou troque para Google Gemini (chave gratuita em aistudio.google.com).
-            </p>
+            <p className="text-xs text-muted-foreground font-mono leading-relaxed">{t("adminAi.privacyNote")}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t("adminAi.quotaNote")}</p>
           </>
         )}
       </div>
     </DashboardLayout>
   );
 }
-

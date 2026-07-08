@@ -26,8 +26,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ShieldAlert, Users, ShieldCheck, User, Crown, Pencil, Trash2, KeyRound, ShieldHalf } from "lucide-react";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
+import { useEnumLabels } from "@/i18n/useEnumLabels";
+import { useResizableColumns } from "@/hooks/useResizableColumns";
+import { ResizableColGroup, ResizableTable, ResizableTh } from "@/components/ResizableTable";
+import { formatLocaleDateTime } from "@/i18n/formatLocaleDate";
 
 type UserRole = "admin" | "security-analyst" | "user";
+
+type UsersColumnKey = "user" | "email" | "role" | "loginMethod" | "lastAccess" | "actions";
+
+const USERS_COLUMN_WIDTHS: Record<UsersColumnKey, number> = {
+  user: 200,
+  email: 220,
+  role: 140,
+  loginMethod: 120,
+  lastAccess: 160,
+  actions: 180,
+};
+
+const USERS_COLUMNS: UsersColumnKey[] = ["user", "email", "role", "loginMethod", "lastAccess", "actions"];
 
 type UserRow = {
   id: number;
@@ -41,23 +59,25 @@ type UserRow = {
 };
 
 function RoleBadge({ role }: { role: UserRole }) {
+  const labels = useEnumLabels();
+
   if (role === "admin") {
     return (
       <Badge className="bg-yellow-400/10 text-yellow-400 border-yellow-400/30 font-mono text-xs">
-        <Crown className="w-3 h-3 mr-1" /> Admin
+        <Crown className="w-3 h-3 mr-1" /> {labels.role(role)}
       </Badge>
     );
   }
   if (role === "security-analyst") {
     return (
       <Badge className="bg-blue-400/10 text-blue-400 border-blue-400/30 font-mono text-xs">
-        <ShieldHalf className="w-3 h-3 mr-1" /> Security Analyst
+        <ShieldHalf className="w-3 h-3 mr-1" /> {labels.role(role)}
       </Badge>
     );
   }
   return (
     <Badge variant="outline" className="font-mono text-xs text-muted-foreground">
-      <User className="w-3 h-3 mr-1" /> Usuário
+      <User className="w-3 h-3 mr-1" /> {labels.role(role)}
     </Badge>
   );
 }
@@ -70,6 +90,9 @@ function RoleIcon({ role }: { role: UserRole }) {
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
+  const { locale, t } = useLocale();
+  const labels = useEnumLabels();
+  const { widths, onResizeStart } = useResizableColumns("admin-users", USERS_COLUMN_WIDTHS);
   const utils = trpc.useUtils();
 
   const [roleTarget, setRoleTarget] = useState<{ user: UserRow; newRole: UserRole } | null>(null);
@@ -83,7 +106,7 @@ export default function AdminUsers() {
 
   const updateRoleMutation = trpc.admin.updateUserRole.useMutation({
     onSuccess: () => {
-      toast.success("Perfil do usuário atualizado com sucesso!");
+      toast.success(t("adminUsers.roleUpdated"));
       utils.admin.listUsers.invalidate();
       setRoleTarget(null);
     },
@@ -92,7 +115,7 @@ export default function AdminUsers() {
 
   const updateUserMutation = trpc.admin.updateUser.useMutation({
     onSuccess: () => {
-      toast.success("Dados do usuário atualizados!");
+      toast.success(t("adminUsers.userUpdated"));
       utils.admin.listUsers.invalidate();
       setEditTarget(null);
     },
@@ -101,7 +124,7 @@ export default function AdminUsers() {
 
   const deleteUserMutation = trpc.admin.deleteUser.useMutation({
     onSuccess: () => {
-      toast.success("Usuário excluído com sucesso!");
+      toast.success(t("adminUsers.userDeleted"));
       utils.admin.listUsers.invalidate();
       setDeleteTarget(null);
     },
@@ -110,7 +133,7 @@ export default function AdminUsers() {
 
   const resetPasswordMutation = trpc.admin.resetUserPassword.useMutation({
     onSuccess: () => {
-      toast.success('Senha resetada para "Security2026@"!');
+      toast.success(t("adminUsers.passwordReset"));
       setResetTarget(null);
     },
     onError: (e) => toast.error(e.message),
@@ -122,13 +145,15 @@ export default function AdminUsers() {
     setEditEmail(u.email ?? "");
   };
 
+  const roleLabel = (role: UserRole) => labels.role(role);
+
   if (currentUser?.role !== "admin") {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <ShieldAlert className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground font-mono text-sm">Acesso restrito a administradores.</p>
+            <p className="text-muted-foreground font-mono text-sm">{t("common.adminOnly")}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -139,17 +164,16 @@ export default function AdminUsers() {
   const analystCount = users?.filter((u) => u.role === "security-analyst").length ?? 0;
   const userCount = users?.filter((u) => u.role === "user").length ?? 0;
 
-  // Ações de promoção (usuário pode ir direto para admin ou passar por analyst)
   const getPromoteActions = (u: UserRow): Array<{ label: string; newRole: UserRole; className: string }> => {
     if (u.role === "user") {
       return [
         {
-          label: "→ Analyst",
+          label: t("adminUsers.promoteAnalyst"),
           newRole: "security-analyst",
           className: "h-7 text-xs font-mono border-blue-400/30 text-blue-400 hover:bg-blue-400/10",
         },
         {
-          label: "→ Admin",
+          label: t("adminUsers.promoteAdmin"),
           newRole: "admin",
           className: "h-7 text-xs font-mono border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10",
         },
@@ -158,7 +182,7 @@ export default function AdminUsers() {
     if (u.role === "security-analyst") {
       return [
         {
-          label: "→ Admin",
+          label: t("adminUsers.promoteAdmin"),
           newRole: "admin",
           className: "h-7 text-xs font-mono border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10",
         },
@@ -169,90 +193,121 @@ export default function AdminUsers() {
 
   const getDemoteAction = (u: UserRow): { label: string; newRole: UserRole; className: string } | null => {
     if (u.role === "admin") {
-      return { label: "← Analyst", newRole: "security-analyst", className: "h-7 text-xs font-mono border-blue-400/30 text-blue-400 hover:bg-blue-400/10" };
+      return {
+        label: t("adminUsers.demoteAnalyst"),
+        newRole: "security-analyst",
+        className: "h-7 text-xs font-mono border-blue-400/30 text-blue-400 hover:bg-blue-400/10",
+      };
     }
     if (u.role === "security-analyst") {
-      return { label: "← Usuário", newRole: "user", className: "h-7 text-xs font-mono border-red-400/30 text-red-400 hover:bg-red-400/10" };
+      return {
+        label: t("adminUsers.demoteUser"),
+        newRole: "user",
+        className: "h-7 text-xs font-mono border-red-400/30 text-red-400 hover:bg-red-400/10",
+      };
     }
-    return null; // user cannot be demoted further
-  };
-
-  const roleLabel = (role: UserRole) => {
-    if (role === "admin") return "Administrador";
-    if (role === "security-analyst") return "Security Analyst";
-    return "Usuário";
+    return null;
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-xl font-mono font-bold text-foreground flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              Gerenciamento de Usuários
+              {t("adminUsers.title")}
             </h1>
-            <p className="text-xs text-muted-foreground font-mono mt-1">
-              Gerencie perfis, permissões e credenciais. Somente admins podem promover usuários.
-            </p>
+            <p className="text-xs text-muted-foreground font-mono mt-1">{t("adminUsers.subtitle")}</p>
           </div>
           <div className="flex gap-3">
             <div className="bg-card border border-border rounded-lg px-3 py-2 text-center">
               <p className="text-lg font-mono font-bold text-yellow-400">{adminCount}</p>
-              <p className="text-xs text-muted-foreground font-mono">Admins</p>
+              <p className="text-xs text-muted-foreground font-mono">{t("adminUsers.admins")}</p>
             </div>
             <div className="bg-card border border-border rounded-lg px-3 py-2 text-center">
               <p className="text-lg font-mono font-bold text-blue-400">{analystCount}</p>
-              <p className="text-xs text-muted-foreground font-mono">Analysts</p>
+              <p className="text-xs text-muted-foreground font-mono">{t("adminUsers.analysts")}</p>
             </div>
             <div className="bg-card border border-border rounded-lg px-3 py-2 text-center">
               <p className="text-lg font-mono font-bold text-primary">{userCount}</p>
-              <p className="text-xs text-muted-foreground font-mono">Usuários</p>
+              <p className="text-xs text-muted-foreground font-mono">{t("adminUsers.users")}</p>
             </div>
           </div>
         </div>
 
-        {/* RBAC Info */}
         <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3">
           <p className="text-xs font-mono text-blue-400 font-semibold mb-1 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Hierarquia de Perfis
+            {t("adminUsers.hierarchy")}
           </p>
           <div className="flex flex-wrap gap-4 text-xs font-mono text-muted-foreground">
-            <span><span className="text-muted-foreground font-semibold">Usuário</span> — Aplicações, análises e achados próprios</span>
+            <span>{t("adminUsers.hierarchyUser")}</span>
             <span className="text-muted-foreground">→</span>
-            <span><span className="text-blue-400 font-semibold">Security Analyst</span> — Revisão AppSec (mesmo escopo do usuário)</span>
+            <span>{t("adminUsers.hierarchyAnalyst")}</span>
             <span className="text-muted-foreground">→</span>
-            <span><span className="text-yellow-400 font-semibold">Admin</span> — Acesso total, gerencia usuários, checklist e assistente IA</span>
+            <span>{t("adminUsers.hierarchyAdmin")}</span>
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <p className="text-xs text-muted-foreground font-mono px-4 py-2 border-b border-border">
+            {t("common.tableResizeHint")}
+          </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <ResizableTable className="text-sm">
+              <ResizableColGroup columns={USERS_COLUMNS} widths={widths} />
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">Usuário</th>
-                  <th className="text-left px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">Email</th>
-                  <th className="text-left px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">Perfil</th>
-                  <th className="text-left px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">Método Login</th>
-                  <th className="text-left px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">Último Acesso</th>
-                  <th className="text-right px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">Ações</th>
+                <tr className="border-b border-border bg-muted/30 text-left">
+                  <ResizableTh
+                    innerClassName="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider"
+                    onResizeStart={(x) => onResizeStart("user", x)}
+                  >
+                    {t("adminUsers.colUser")}
+                  </ResizableTh>
+                  <ResizableTh
+                    innerClassName="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider"
+                    onResizeStart={(x) => onResizeStart("email", x)}
+                  >
+                    {t("adminUsers.colEmail")}
+                  </ResizableTh>
+                  <ResizableTh
+                    innerClassName="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider"
+                    onResizeStart={(x) => onResizeStart("role", x)}
+                  >
+                    {t("adminUsers.colRole")}
+                  </ResizableTh>
+                  <ResizableTh
+                    innerClassName="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider"
+                    onResizeStart={(x) => onResizeStart("loginMethod", x)}
+                  >
+                    {t("adminUsers.colLoginMethod")}
+                  </ResizableTh>
+                  <ResizableTh
+                    innerClassName="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider"
+                    onResizeStart={(x) => onResizeStart("lastAccess", x)}
+                  >
+                    {t("adminUsers.colLastAccess")}
+                  </ResizableTh>
+                  <ResizableTh
+                    resizable={false}
+                    innerClassName="px-4 py-3 font-mono text-xs text-muted-foreground uppercase tracking-wider justify-end"
+                  >
+                    {t("common.actions")}
+                  </ResizableTh>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground font-mono text-xs">
-                      Carregando usuários...
+                      {t("adminUsers.loading")}
                     </td>
                   </tr>
                 ) : !users?.length ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground font-mono text-xs">
-                      Nenhum usuário encontrado.
+                      {t("adminUsers.empty")}
                     </td>
                   </tr>
                 ) : (
@@ -261,21 +316,21 @@ export default function AdminUsers() {
                     const demoteAction = getDemoteAction(u);
                     return (
                       <tr key={u.id} className="hover:bg-muted/10 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+                        <td className="px-4 py-3 overflow-hidden">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                               <RoleIcon role={u.role} />
                             </div>
-                            <span className="font-mono text-sm text-foreground">
+                            <span className="font-mono text-sm text-foreground truncate">
                               {u.name ?? "—"}
                               {u.id === currentUser?.id && (
-                                <span className="ml-1 text-xs text-muted-foreground">(você)</span>
+                                <span className="ml-1 text-xs text-muted-foreground">{t("common.you")}</span>
                               )}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="font-mono text-xs text-muted-foreground">{u.email ?? "—"}</span>
+                        <td className="px-4 py-3 overflow-hidden">
+                          <span className="font-mono text-xs text-muted-foreground truncate block">{u.email ?? "—"}</span>
                         </td>
                         <td className="px-4 py-3">
                           <RoleBadge role={u.role} />
@@ -285,15 +340,13 @@ export default function AdminUsers() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-xs font-mono text-muted-foreground">
-                            {u.lastSignedIn
-                              ? new Date(u.lastSignedIn).toLocaleString("pt-BR", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "—"}
+                            {formatLocaleDateTime(locale, u.lastSignedIn, {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -305,7 +358,7 @@ export default function AdminUsers() {
                                   size="sm"
                                   onClick={() => openEdit(u)}
                                   className="h-7 w-7 p-0 border-border text-muted-foreground hover:text-foreground hover:bg-muted/20"
-                                  title="Editar usuário"
+                                  title={t("adminUsers.editUser")}
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </Button>
@@ -314,7 +367,7 @@ export default function AdminUsers() {
                                   size="sm"
                                   onClick={() => setResetTarget(u)}
                                   className="h-7 w-7 p-0 border-blue-400/30 text-blue-400 hover:bg-blue-400/10"
-                                  title="Resetar senha"
+                                  title={t("adminUsers.resetPassword")}
                                 >
                                   <KeyRound className="w-3.5 h-3.5" />
                                 </Button>
@@ -325,7 +378,7 @@ export default function AdminUsers() {
                                     size="sm"
                                     onClick={() => setRoleTarget({ user: u, newRole: action.newRole })}
                                     className={action.className}
-                                    title={`Alterar para ${roleLabel(action.newRole)}`}
+                                    title={t("adminUsers.changeToRole", { role: roleLabel(action.newRole) })}
                                   >
                                     {action.label}
                                   </Button>
@@ -336,7 +389,7 @@ export default function AdminUsers() {
                                     size="sm"
                                     onClick={() => setRoleTarget({ user: u, newRole: demoteAction.newRole })}
                                     className={demoteAction.className}
-                                    title={`Rebaixar para ${roleLabel(demoteAction.newRole)}`}
+                                    title={t("adminUsers.demoteToRole", { role: roleLabel(demoteAction.newRole) })}
                                   >
                                     {demoteAction.label}
                                   </Button>
@@ -346,7 +399,7 @@ export default function AdminUsers() {
                                   size="sm"
                                   onClick={() => setDeleteTarget(u)}
                                   className="h-7 w-7 p-0 border-red-400/30 text-red-400 hover:bg-red-400/10"
-                                  title="Excluir usuário"
+                                  title={t("adminUsers.deleteUser")}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
@@ -361,56 +414,52 @@ export default function AdminUsers() {
                   })
                 )}
               </tbody>
-            </table>
+            </ResizableTable>
           </div>
         </div>
 
         <div className="bg-muted/20 border border-border rounded-xl p-4">
           <p className="text-xs text-muted-foreground font-mono">
-            <span className="text-primary font-semibold">Nota:</span>{" "}
-            A senha padrão de reset é{" "}
-            <span className="text-yellow-400 font-semibold">Security2026@</span> — oriente o usuário a alterá-la no primeiro acesso.
-            A exclusão de um usuário remove permanentemente suas aplicações, análises e achados.
+            <span className="text-primary font-semibold">{t("common.note")}:</span> {t("adminUsers.note")}
           </p>
         </div>
       </div>
 
-      {/* Edit User Dialog */}
       <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
             <DialogTitle className="font-mono text-foreground flex items-center gap-2">
               <Pencil className="w-4 h-4 text-primary" />
-              Editar Usuário
+              {t("adminUsers.editTitle")}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Atualize os dados de <span className="font-semibold text-foreground">"{editTarget?.name}"</span>.
+              {t("adminUsers.editDesc", { name: editTarget?.name ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="font-mono text-xs text-muted-foreground">Nome</Label>
+              <Label className="font-mono text-xs text-muted-foreground">{t("common.name")}</Label>
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 className="font-mono text-sm bg-muted/20 border-border"
-                placeholder="Nome completo"
+                placeholder={t("adminUsers.fullNamePlaceholder")}
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="font-mono text-xs text-muted-foreground">Email</Label>
+              <Label className="font-mono text-xs text-muted-foreground">{t("common.email")}</Label>
               <Input
                 type="email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
                 className="font-mono text-sm bg-muted/20 border-border"
-                placeholder="email@exemplo.com"
+                placeholder={t("adminUsers.emailPlaceholder")}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditTarget(null)} className="font-mono">
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -420,106 +469,91 @@ export default function AdminUsers() {
               disabled={updateUserMutation.isPending}
               className="font-mono bg-primary hover:bg-primary/90"
             >
-              {updateUserMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+              {updateUserMutation.isPending ? t("common.saving") : t("adminUsers.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password */}
       <AlertDialog open={!!resetTarget} onOpenChange={(open) => !open && setResetTarget(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-mono text-foreground flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-blue-400" />
-              Resetar Senha
+              {t("adminUsers.resetTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              A senha de <span className="font-semibold text-foreground">"{resetTarget?.name}"</span> será redefinida para{" "}
-              <span className="font-mono text-yellow-400 font-semibold">Security2026@</span>.
-              O usuário deverá alterar a senha no próximo acesso.
+              {t("adminUsers.resetDesc", { name: resetTarget?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-mono">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="font-mono">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => resetTarget && resetPasswordMutation.mutate({ userId: resetTarget.id })}
               className="bg-blue-600 hover:bg-blue-700 font-mono"
             >
-              {resetPasswordMutation.isPending ? "Resetando..." : "Confirmar Reset"}
+              {resetPasswordMutation.isPending ? t("adminUsers.resetting") : t("adminUsers.confirmReset")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete User */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-mono text-foreground flex items-center gap-2">
               <Trash2 className="w-4 h-4 text-red-400" />
-              Excluir Usuário
+              {t("adminUsers.deleteTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Tem certeza que deseja excluir{" "}
-              <span className="font-semibold text-foreground">"{deleteTarget?.name}"</span>?
-              Esta ação é <span className="text-red-400 font-semibold">irreversível</span> e removerá
-              todos os incidentes e histórico deste usuário.
+              {t("adminUsers.deleteDesc", { name: deleteTarget?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-mono">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="font-mono">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteTarget && deleteUserMutation.mutate({ userId: deleteTarget.id })}
               className="bg-red-600 hover:bg-red-700 font-mono"
             >
-              {deleteUserMutation.isPending ? "Excluindo..." : "Excluir Permanentemente"}
+              {deleteUserMutation.isPending ? t("adminUsers.deleting") : t("adminUsers.deletePermanent")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Role Change */}
       <AlertDialog open={!!roleTarget} onOpenChange={(open) => !open && setRoleTarget(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-mono text-foreground">
-              Alterar Perfil: {roleLabel(roleTarget?.newRole ?? "user")}
+              {t("adminUsers.changeRoleTitle", { role: roleLabel(roleTarget?.newRole ?? "user") })}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Alterar o perfil de{" "}
-              <span className="font-semibold text-foreground">"{roleTarget?.user.name}"</span>{" "}
-              de <span className="font-semibold">{roleLabel(roleTarget?.user.role ?? "user")}</span>{" "}
-              para{" "}
-              <span className={`font-semibold ${
-                roleTarget?.newRole === "admin" ? "text-yellow-400" :
-                roleTarget?.newRole === "security-analyst" ? "text-blue-400" : "text-green-400"
-              }`}>
-                {roleLabel(roleTarget?.newRole ?? "user")}
-              </span>?
+              {t("adminUsers.changeRoleDesc", {
+                name: roleTarget?.user.name ?? "",
+                from: roleLabel(roleTarget?.user.role ?? "user"),
+                to: roleLabel(roleTarget?.newRole ?? "user"),
+              })}
               {roleTarget?.newRole === "security-analyst" && (
-                <span className="block mt-1 text-xs">
-                  O usuário passará a ter o perfil Security Analyst (revisor AppSec).
-                </span>
+                <span className="block mt-1 text-xs">{t("adminUsers.analystNote")}</span>
               )}
               {roleTarget?.newRole === "admin" && (
-                <span className="block mt-1 text-xs text-yellow-400">
-                  Atenção: este usuário terá acesso total ao painel admin, incluindo gerenciamento de usuários, checklist OWASP e assistente IA.
-                </span>
+                <span className="block mt-1 text-xs text-yellow-400">{t("adminUsers.adminNote")}</span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-mono">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="font-mono">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => roleTarget && updateRoleMutation.mutate({ userId: roleTarget.user.id, role: roleTarget.newRole })}
               className={
-                roleTarget?.newRole === "admin" ? "bg-yellow-600 hover:bg-yellow-700 font-mono" :
-                roleTarget?.newRole === "security-analyst" ? "bg-blue-600 hover:bg-blue-700 font-mono" :
-                "bg-red-600 hover:bg-red-700 font-mono"
+                roleTarget?.newRole === "admin"
+                  ? "bg-yellow-600 hover:bg-yellow-700 font-mono"
+                  : roleTarget?.newRole === "security-analyst"
+                    ? "bg-blue-600 hover:bg-blue-700 font-mono"
+                    : "bg-red-600 hover:bg-red-700 font-mono"
               }
             >
-              {updateRoleMutation.isPending ? "Atualizando..." : "Confirmar"}
+              {updateRoleMutation.isPending ? t("adminUsers.updating") : t("common.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

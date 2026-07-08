@@ -1,5 +1,11 @@
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from "@shared/const";
+import {
+  CHECKLIST_LOCALE_STORAGE_KEY,
+  isChecklistLocale,
+  type ChecklistLocale,
+} from "@shared/checklistLocale";
+import { LOCALE_HEADER } from "@shared/requestLocale";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -20,6 +26,12 @@ if (analyticsEndpoint && analyticsWebsiteId) {
 }
 
 const queryClient = new QueryClient();
+
+function getStoredLocale(): ChecklistLocale {
+  if (typeof window === "undefined") return "pt";
+  const stored = localStorage.getItem(CHECKLIST_LOCALE_STORAGE_KEY);
+  return isChecklistLocale(stored) ? stored : "pt";
+}
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -54,9 +66,12 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       fetch(input, init) {
+        const headers = new Headers(init?.headers);
+        headers.set(LOCALE_HEADER, getStoredLocale());
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
+          headers,
         });
       },
     }),

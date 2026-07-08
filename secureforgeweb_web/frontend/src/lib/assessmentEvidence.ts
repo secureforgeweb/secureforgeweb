@@ -61,6 +61,12 @@ export function exportEvidencePng(input: {
   evidence: string;
   rationale: string;
   artifacts: AssessmentEvidenceArtifact[];
+  labels?: {
+    header: string;
+    scopeLine: string;
+    evidenceTitle: string;
+    rationaleTitle: string;
+  };
 }): string {
   const canvas = document.createElement("canvas");
   canvas.width = 960;
@@ -73,7 +79,7 @@ export function exportEvidencePng(input: {
 
   ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 22px ui-monospace, monospace";
-  ctx.fillText(`SecureForge — Evidência ${input.itemCode}`, 32, 48);
+  ctx.fillText(input.labels?.header ?? `SecureForge — Evidência ${input.itemCode}`, 32, 48);
 
   ctx.fillStyle = "#e2e8f0";
   ctx.font = "16px ui-sans-serif, system-ui, sans-serif";
@@ -81,12 +87,16 @@ export function exportEvidencePng(input: {
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "13px ui-monospace, monospace";
-  ctx.fillText(`${SCOPE_LABELS[input.scope]} · ${input.confidence}% confiança`, 32, 102);
+  ctx.fillText(
+    input.labels?.scopeLine ?? `${SCOPE_LABELS[input.scope]} · ${input.confidence}% confiança`,
+    32,
+    102
+  );
 
   let y = 132;
   const sections = [
-    { title: "Evidência", body: input.evidence },
-    { title: "Racional", body: input.rationale },
+    { title: input.labels?.evidenceTitle ?? "Evidência", body: input.evidence },
+    { title: input.labels?.rationaleTitle ?? "Racional", body: input.rationale },
     ...input.artifacts.map((a) => ({ title: a.title, body: a.content })),
   ];
 

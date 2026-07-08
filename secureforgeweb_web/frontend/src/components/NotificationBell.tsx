@@ -2,30 +2,62 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Bell, X, CheckCheck, AlertTriangle, RefreshCw, Info } from "lucide-react";
 import { useLocation } from "wouter";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
+import type { MessageKey } from "@/i18n/messages";
 
-const TYPE_CONFIG = {
-  reclassification: { icon: RefreshCw, color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20", label: "Reclassificação" },
-  status_changed:   { icon: AlertTriangle, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", label: "Status alterado" },
-  risk_changed:     { icon: AlertTriangle, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", label: "Risco alterado" },
-  system:           { icon: Info, color: "text-muted-foreground", bg: "bg-muted/30", border: "border-border", label: "Sistema" },
-};
+type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
 
-function timeAgo(date: Date | string) {
+function getTypeConfig(t: TranslateFn) {
+  return {
+    reclassification: {
+      icon: RefreshCw,
+      color: "text-yellow-400",
+      bg: "bg-yellow-500/10",
+      border: "border-yellow-500/20",
+      label: t("notifications.reclassification"),
+    },
+    status_changed: {
+      icon: AlertTriangle,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/20",
+      label: t("notifications.statusChanged"),
+    },
+    risk_changed: {
+      icon: AlertTriangle,
+      color: "text-orange-400",
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/20",
+      label: t("notifications.riskChanged"),
+    },
+    system: {
+      icon: Info,
+      color: "text-muted-foreground",
+      bg: "bg-muted/30",
+      border: "border-border",
+      label: t("notifications.system"),
+    },
+  };
+}
+
+function timeAgo(date: Date | string, t: TranslateFn) {
   const d = new Date(date);
   const diff = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diff < 60) return "agora";
-  if (diff < 3600) return `${Math.floor(diff / 60)}min atrás`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h atrás`;
-  return `${Math.floor(diff / 86400)}d atrás`;
+  if (diff < 60) return t("notifications.now");
+  if (diff < 3600) return t("notifications.minutesAgo", { count: Math.floor(diff / 60) });
+  if (diff < 86400) return t("notifications.hoursAgo", { count: Math.floor(diff / 3600) });
+  return t("notifications.daysAgo", { count: Math.floor(diff / 86400) });
 }
 
 export default function NotificationBell() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
+  const typeConfig = getTypeConfig(t);
 
   const { data: count = 0 } = trpc.notifications.unreadCount.useQuery(undefined, {
-    refetchInterval: 30000, // poll every 30s
+    refetchInterval: 30000,
   });
   const { data: notifications = [] } = trpc.notifications.list.useQuery(undefined, {
     enabled: open,
@@ -64,7 +96,7 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen(!open)}
         className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted/50 transition-colors"
-        title="Notificações"
+        title={t("notifications.title")}
       >
         <Bell className="w-4 h-4 text-muted-foreground" />
         {count > 0 && (
@@ -76,19 +108,16 @@ export default function NotificationBell() {
 
       {open && (
         <>
-          {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
-          {/* Panel */}
           <div className="absolute right-0 top-10 z-50 w-80 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
-            {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-foreground" />
-                <span className="text-sm font-mono font-semibold text-foreground">Notificações</span>
+                <span className="text-sm font-mono font-semibold text-foreground">{t("notifications.title")}</span>
                 {count > 0 && (
                   <span className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-                    {count} nova{count !== 1 ? "s" : ""}
+                    {t("notifications.newCount", { count })}
                   </span>
                 )}
               </div>
@@ -97,7 +126,7 @@ export default function NotificationBell() {
                   <button
                     onClick={() => markAllRead.mutate()}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
-                    title="Marcar todas como lidas"
+                    title={t("notifications.markAllRead")}
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                   </button>
@@ -108,16 +137,15 @@ export default function NotificationBell() {
               </div>
             </div>
 
-            {/* List */}
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <Bell className="w-8 h-8 mb-2 opacity-30" />
-                  <p className="text-sm font-mono">Nenhuma notificação</p>
+                  <p className="text-sm font-mono">{t("notifications.empty")}</p>
                 </div>
               ) : (
                 notifications.map((notif) => {
-                  const cfg = TYPE_CONFIG[notif.type as keyof typeof TYPE_CONFIG] ?? TYPE_CONFIG.system;
+                  const cfg = typeConfig[notif.type as keyof typeof typeConfig] ?? typeConfig.system;
                   const Icon = cfg.icon;
                   return (
                     <div
@@ -138,7 +166,7 @@ export default function NotificationBell() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{notif.message}</p>
-                        <p className="text-[10px] text-muted-foreground/60 font-mono mt-1">{timeAgo(notif.createdAt)}</p>
+                        <p className="text-[10px] text-muted-foreground/60 font-mono mt-1">{timeAgo(notif.createdAt, t)}</p>
                       </div>
                     </div>
                   );

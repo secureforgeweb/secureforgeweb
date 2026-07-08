@@ -1,10 +1,10 @@
 import pg from "pg";
-import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { loadProjectEnv } from "./loadProjectEnv.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+loadProjectEnv(import.meta.url);
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -47,16 +47,22 @@ const ITEMS = [
   { code: "SURF-02", category: "Superfície de ataque", title: "Dependências atualizadas", description: "Bibliotecas e frameworks estão atualizados sem CVEs críticos conhecidos.", owaspRef: "ASVS 1.14", severity: "medium", recommendation: { title: "Atualizar dependências", description: "Vulnerabilidades conhecidas em libs são exploradas ativamente.", action: "Execute auditoria (npm audit) e atualize pacotes com CVEs críticos.", reference: "OWASP Top 10 A06" } },
 ];
 
-async function upsertCategory(client, cat) {
+async function upsertCategory(client, checklistId, cat) {
   const existing = await client.query(
-    `SELECT id FROM checklist_categories WHERE name = $1`,
-    [cat.name]
+    `SELECT id FROM checklist_categories WHERE name = $1 AND "checklistId" = $2`,
+    [cat.name, checklistId]
   );
-  if (existing.rows.length > 0) return existing.rows[0].id;
+  if (existing.rows.length > 0) {
+    await client.query(
+      `UPDATE checklist_categories SET "namePt" = $1, "descriptionPt" = $2 WHERE id = $3`,
+      [cat.name, cat.description, existing.rows[0].id]
+    );
+    return existing.rows[0].id;
+  }
   const inserted = await client.query(
-    `INSERT INTO checklist_categories (name, description, color, "sortOrder", "createdAt")
-     VALUES ($1, $2, $3, $4, NOW()) RETURNING id`,
-    [cat.name, cat.description, cat.color, cat.sortOrder]
+    `INSERT INTO checklist_categories ("checklistId", name, "namePt", description, "descriptionPt", color, "sortOrder", "createdAt")
+     VALUES ($1, $2, $2, $3, $3, $4, $5, NOW()) RETURNING id`,
+    [checklistId, cat.name, cat.description, cat.color, cat.sortOrder]
   );
   return inserted.rows[0].id;
 }
@@ -78,16 +84,23 @@ async function main() {
       console.log(`Checklist v1.0 já existe (id=${checklistId})`);
     } else {
       const inserted = await client.query(
-        `INSERT INTO checklists (name, version, "isActive", "createdAt")
-         VALUES ('Checklist de Segurança Web', '1.0', true, NOW()) RETURNING id`
+        `INSERT INTO checklists (name, version, profile, source, "isActive", "isDefault", "itemCount", "createdAt")
+         VALUES ('Checklist Essential SecureForge', '1.0', 'essential', 'local', true, true, $1, NOW()) RETURNING id`,
+        [ITEMS.length]
       );
       checklistId = inserted.rows[0].id;
       console.log(`Checklist v1.0 criado (id=${checklistId})`);
     }
 
+    await client.query(
+      `UPDATE checklists SET profile = 'essential', source = 'local', "isDefault" = true, "itemCount" = $1,
+       "namePt" = 'Checklist Essential SecureForge' WHERE id = $2`,
+      [ITEMS.length, checklistId]
+    );
+
     const categoryIds = {};
     for (const cat of CATEGORIES) {
-      categoryIds[cat.name] = await upsertCategory(client, cat);
+      categoryIds[cat.name] = await upsertCategory(client, checklistId, cat);
       console.log(`Categoria: ${cat.name}`);
     }
 
@@ -103,8 +116,8 @@ async function main() {
         itemId = existing.rows[0].id;
       } else {
         const inserted = await client.query(
-          `INSERT INTO checklist_items ("checklistId", "categoryId", code, title, description, "owaspRef", "suggestedSeverity", "sortOrder", "createdAt")
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) RETURNING id`,
+          `INSERT INTO checklist_items ("checklistId", "categoryId", code, title, "titlePt", description, "descriptionPt", "owaspRef", "suggestedSeverity", "sortOrder", "createdAt")
+           VALUES ($1, $2, $3, $4, $4, $5, $5, $6, $7, $8, NOW()) RETURNING id`,
           [checklistId, categoryId, item.code, item.title, item.description, item.owaspRef, item.severity, index + 1]
         );
         itemId = inserted.rows[0].id;

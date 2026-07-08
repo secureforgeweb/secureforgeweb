@@ -2,10 +2,12 @@ import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ShieldAlert, Users, ListChecks, Brain, BarChart3 } from "lucide-react";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
 export default function Admin() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { t } = useLocale();
 
   if (user?.role !== "admin") {
     return (
@@ -13,7 +15,7 @@ export default function Admin() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <ShieldAlert className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground font-mono">Acesso restrito a administradores.</p>
+            <p className="text-muted-foreground font-mono">{t("common.adminOnly")}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -23,29 +25,29 @@ export default function Admin() {
   const cards = [
     {
       icon: Users,
-      label: "Usuários",
-      desc: "Gerenciar usuários e papéis do sistema",
+      label: t("admin.usersCard"),
+      desc: t("admin.usersCardDesc"),
       path: "/admin/users",
       color: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     },
     {
       icon: ListChecks,
-      label: "Checklist OWASP",
-      desc: "Visualizar e ajustar severidade sugerida dos itens",
+      label: t("admin.checklistCard"),
+      desc: t("admin.checklistCardDesc"),
       path: "/admin/checklist-items",
       color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
     },
     {
       icon: BarChart3,
-      label: "Análises globais",
-      desc: "Todas as análises e benchmark de modelos por aplicação",
+      label: t("admin.analysesCard"),
+      desc: t("admin.analysesCardDesc"),
       path: "/admin/analyses",
       color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
     },
     {
       icon: Brain,
-      label: "Meu Assistente IA",
-      desc: "Sua chave, provedor e modelo de LLM",
+      label: t("admin.aiCard"),
+      desc: t("admin.aiCardDesc"),
       path: "/profile/ai-assistant",
       color: "text-violet-400 bg-violet-400/10 border-violet-400/20",
     },
@@ -55,8 +57,8 @@ export default function Admin() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl font-bold text-foreground font-mono">Painel Administrativo</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Gerenciamento do SecureForge Web</p>
+          <h1 className="text-xl font-bold text-foreground font-mono">{t("admin.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("admin.subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -57,6 +57,20 @@
       "when": 1754265600000,
       "tag": "0017_analysis_item_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1754870400000,
+      "tag": "0018_owasp_asvs_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755475200000,
+      "tag": "0019_checklist_i18n",
+      "breakpoints": true
     }
   ]
 }

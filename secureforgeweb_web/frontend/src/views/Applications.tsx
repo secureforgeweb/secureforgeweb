@@ -5,17 +5,19 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Globe, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
 export default function Applications() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { t } = useLocale();
   const utils = trpc.useUtils();
   const isAdmin = user?.role === "admin";
   const { data: apps, isLoading } = trpc.applications.list.useQuery();
 
   const deleteMutation = trpc.applications.delete.useMutation({
     onSuccess: () => {
-      toast.success("Aplicação removida.");
+      toast.success(t("apps.removed"));
       utils.applications.list.invalidate();
       utils.applications.stats.invalidate();
     },
@@ -27,29 +29,25 @@ export default function Applications() {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-foreground font-mono">Aplicações</h1>
+            <h1 className="text-xl font-bold text-foreground font-mono">{t("apps.title")}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {isAdmin
-                ? "Todas as aplicações cadastradas no sistema (visão administrador)"
-                : "Cadastre e gerencie aplicações web para análise de segurança"}
+              {isAdmin ? t("apps.subtitleAdmin") : t("apps.subtitle")}
             </p>
           </div>
           <Button className="font-mono text-xs" onClick={() => navigate("/applications/new")}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Nova Aplicação
+            <Plus className="w-3.5 h-3.5 mr-1" /> {t("apps.new")}
           </Button>
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground font-mono">Carregando...</p>
+          <p className="text-sm text-muted-foreground font-mono">{t("common.loading")}</p>
         ) : !apps?.length ? (
           <div className="bg-card border border-border rounded-xl p-10 text-center">
             <Globe className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm font-mono text-foreground mb-1">Nenhuma aplicação cadastrada</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Cadastre sua primeira aplicação para iniciar o diagnóstico de segurança.
-            </p>
+            <p className="text-sm font-mono text-foreground mb-1">{t("apps.empty")}</p>
+            <p className="text-xs text-muted-foreground mb-4">{t("apps.emptyDesc")}</p>
             <Button variant="outline" className="font-mono text-xs" onClick={() => navigate("/applications/new")}>
-              Cadastrar aplicação
+              {t("apps.register")}
             </Button>
           </div>
         ) : (
@@ -69,7 +67,7 @@ export default function Applications() {
                     )}
                     {isAdmin && "ownerEmail" in app && (
                       <p className="text-[10px] text-muted-foreground font-mono mt-1">
-                        Dono: {(app as { ownerEmail?: string | null }).ownerEmail ?? "—"}
+                        {t("apps.owner")} {(app as { ownerEmail?: string | null }).ownerEmail ?? "—"}
                       </p>
                     )}
                     {app.description && (
@@ -81,7 +79,7 @@ export default function Applications() {
                     size="icon"
                     className="shrink-0 text-destructive hover:text-destructive"
                     onClick={() => {
-                      if (confirm(`Remover "${app.name}"?`)) deleteMutation.mutate({ id: app.id });
+                      if (confirm(t("common.removeConfirm", { name: app.name }))) deleteMutation.mutate({ id: app.id });
                     }}
                   >
                     <Trash2 className="w-4 h-4" />

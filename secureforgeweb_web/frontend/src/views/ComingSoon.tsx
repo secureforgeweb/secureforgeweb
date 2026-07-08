@@ -2,15 +2,18 @@ import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Construction } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
-const TITLES: Record<string, string> = {
-  "/applications": "Aplicações",
-  "/posture": "Postura de Segurança",
-};
+const ROUTE_TITLE_KEYS = {
+  "/applications": "nav.applications",
+  "/posture": "nav.posture",
+} as const;
 
 export default function ComingSoon() {
   const [location, navigate] = useLocation();
-  const title = TITLES[location] ?? "Em desenvolvimento";
+  const { t } = useLocale();
+  const titleKey = ROUTE_TITLE_KEYS[location as keyof typeof ROUTE_TITLE_KEYS];
+  const title = titleKey ? t(titleKey) : t("comingSoon.title");
 
   return (
     <DashboardLayout>
@@ -20,13 +23,10 @@ export default function ComingSoon() {
         </div>
         <div>
           <h1 className="text-xl font-bold font-mono text-foreground">{title}</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-md">
-            Este módulo será implementado nas próximas fases do SecureForge Web.
-            Consulte o relatório em <code className="text-primary">docs/RELATORIO.md</code>.
-          </p>
+          <p className="text-sm text-muted-foreground mt-2 max-w-md">{t("comingSoon.desc")}</p>
         </div>
         <Button variant="outline" className="font-mono text-xs" onClick={() => navigate("/dashboard")}>
-          Voltar ao Dashboard
+          {t("common.backToDashboard")}
         </Button>
       </div>
     </DashboardLayout>

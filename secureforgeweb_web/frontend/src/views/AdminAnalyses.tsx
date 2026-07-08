@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -29,18 +29,11 @@ import {
   ShieldAlert,
   X,
 } from "lucide-react";
-
-const STATUS_LABELS: Record<string, string> = {
-  rascunho: "Rascunho",
-  em_andamento: "Em andamento",
-  concluida: "Concluída",
-};
-
-const MODE_LABELS: Record<string, string> = {
-  llm: "LLM",
-  heuristic: "Heurístico",
-  "heuristic-fallback": "Heurístico (fallback)",
-};
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
+import { useEnumLabels } from "@/i18n/useEnumLabels";
+import { formatLocaleDate } from "@/i18n/formatLocaleDate";
+import { useResizableColumns } from "@/hooks/useResizableColumns";
+import { ResizableColGroup, ResizableTable, ResizableTh } from "@/components/ResizableTable";
 
 type AnalysisRow = {
   analysisId: number;
@@ -76,18 +69,6 @@ type ColumnKey =
   | "status"
   | "actions";
 
-const COLUMN_LABELS: Record<ColumnKey, string> = {
-  select: "",
-  analysis: "Análise",
-  executor: "Executado por",
-  application: "Aplicação",
-  owner: "Dono app",
-  model: "Modelo IA",
-  posture: "Postura",
-  status: "Status",
-  actions: "Ações",
-};
-
 const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
   select: 44,
   analysis: 200,
@@ -98,10 +79,6 @@ const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
   posture: 90,
   status: 110,
   actions: 100,
-};
-
-const COMPARE_CHART_CONFIG: ChartConfig = {
-  posture: { label: "Postura (%)", color: "#22d3ee" },
 };
 
 type ColumnFilters = {
@@ -129,10 +106,15 @@ function matchesFilter(value: string, filter: string): boolean {
   return value.toLowerCase().includes(filter.trim().toLowerCase());
 }
 
-function rowSearchText(row: AnalysisRow, key: keyof ColumnFilters): string {
+function rowSearchText(
+  row: AnalysisRow,
+  key: keyof ColumnFilters,
+  locale: ReturnType<typeof useLocale>["locale"],
+  labels: ReturnType<typeof useEnumLabels>
+): string {
   switch (key) {
     case "analysis":
-      return `${row.analysisTitle} ${new Date(row.startedAt).toLocaleDateString("pt-BR")}`;
+      return `${row.analysisTitle} ${formatLocaleDate(locale, row.startedAt)}`;
     case "executor":
       return `${row.executorName ?? ""} ${row.executorEmail ?? ""}`;
     case "application":
@@ -144,86 +126,60 @@ function rowSearchText(row: AnalysisRow, key: keyof ColumnFilters): string {
     case "posture":
       return row.postureScore != null ? String(row.postureScore) : "";
     case "status":
-      return `${STATUS_LABELS[row.analysisStatus] ?? row.analysisStatus} ${row.analysisStatus}`;
+      return `${labels.analysisStatus(row.analysisStatus)} ${row.analysisStatus}`;
     default:
       return "";
   }
 }
 
-function useResizableColumns(defaults: Record<ColumnKey, number>) {
-  const [widths, setWidths] = useState(defaults);
-  const resizing = useRef<{ col: ColumnKey; startX: number; startW: number } | null>(null);
-
-  const onResizeStart = useCallback(
-    (col: ColumnKey, clientX: number) => {
-      resizing.current = { col, startX: clientX, startW: widths[col] };
-
-      const onMove = (e: MouseEvent) => {
-        if (!resizing.current) return;
-        const delta = e.clientX - resizing.current.startX;
-        const next = Math.max(48, resizing.current.startW + delta);
-        setWidths((prev) => ({ ...prev, [resizing.current!.col]: next }));
-      };
-
-      const onUp = () => {
-        resizing.current = null;
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-      };
-
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-    },
-    [widths]
-  );
-
-  return { widths, onResizeStart };
-}
-
-function ResizeHandle({
-  onResizeStart,
-}: {
-  onResizeStart: (clientX: number) => void;
-}) {
-  return (
-    <div
-      role="separator"
-      aria-orientation="vertical"
-      className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-primary/40 active:bg-primary/60"
-      onMouseDown={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onResizeStart(e.clientX);
-      }}
-    />
-  );
-}
-
-function comparisonLabel(row: AnalysisRow): string {
-  const who = row.executorName?.split(" ")[0] ?? row.executorEmail?.split("@")[0] ?? "?";
-  const modelMatch = row.aiModelDisplay.match(/\(([^)]+)\)/);
-  const model =
-    modelMatch?.[1] ??
-    row.aiModelKey?.split(":").pop() ??
-    (row.aiModelDisplay !== "Não configurado" ? row.aiModelDisplay : "Não configurado");
-  return `${who} · ${model}`;
-}
-
-function formatModeLabel(mode: string | null | undefined): string | null {
-  if (!mode) return null;
-  return MODE_LABELS[mode] ?? mode;
-}
-
 export default function AdminAnalyses() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { locale, t } = useLocale();
+  const labels = useEnumLabels();
+  const notConfigured = t("common.notConfigured");
   const [applicationFilter, setApplicationFilter] = useState<string>("all");
   const [baseUrlFilter, setBaseUrlFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFilters>(EMPTY_FILTERS);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showCompareChart, setShowCompareChart] = useState(false);
 
-  const { widths, onResizeStart } = useResizableColumns(DEFAULT_WIDTHS);
+  const { widths, onResizeStart } = useResizableColumns("admin-analyses", DEFAULT_WIDTHS);
+
+  const columnLabels: Record<ColumnKey, string> = useMemo(
+    () => ({
+      select: "",
+      analysis: t("adminAnalyses.colAnalysis"),
+      executor: t("adminAnalyses.colExecutor"),
+      application: t("adminAnalyses.colApplication"),
+      owner: t("adminAnalyses.colOwner"),
+      model: t("adminAnalyses.colModel"),
+      posture: t("adminAnalyses.colPosture"),
+      status: t("common.status"),
+      actions: t("common.actions"),
+    }),
+    [t]
+  );
+
+  const compareChartConfig: ChartConfig = useMemo(
+    () => ({
+      posture: { label: t("adminAnalyses.posturePercent"), color: "#22d3ee" },
+    }),
+    [t]
+  );
+
+  const comparisonLabel = useCallback(
+    (row: AnalysisRow): string => {
+      const who = row.executorName?.split(" ")[0] ?? row.executorEmail?.split("@")[0] ?? "?";
+      const modelMatch = row.aiModelDisplay.match(/\(([^)]+)\)/);
+      const model =
+        modelMatch?.[1] ??
+        row.aiModelKey?.split(":").pop() ??
+        (row.aiModelDisplay !== notConfigured ? row.aiModelDisplay : notConfigured);
+      return `${who} · ${model}`;
+    },
+    [notConfigured]
+  );
 
   const { data: analyses, isLoading } = trpc.admin.listAnalyses.useQuery(undefined, {
     enabled: user?.role === "admin",
@@ -240,10 +196,10 @@ export default function AdminAnalyses() {
         return false;
       }
       return (Object.keys(columnFilters) as Array<keyof ColumnFilters>).every((key) =>
-        matchesFilter(rowSearchText(row, key), columnFilters[key])
+        matchesFilter(rowSearchText(row, key, locale, labels), columnFilters[key])
       );
     });
-  }, [analyses, applicationFilter, baseUrlFilter, columnFilters]);
+  }, [analyses, applicationFilter, baseUrlFilter, columnFilters, locale, labels]);
 
   const selectedRows = useMemo(
     () => filteredRows.filter((r) => selectedIds.has(r.analysisId)),
@@ -251,21 +207,21 @@ export default function AdminAnalyses() {
   );
 
   const comparisonData = useMemo(() => {
-    return selectedRows.map((row, index) => ({
-      id: row.analysisId,
-      label: comparisonLabel(row),
-      shortLabel:
-        comparisonLabel(row).length > 22
-          ? `${comparisonLabel(row).slice(0, 20)}…`
-          : comparisonLabel(row),
-      posture: row.postureScore ?? 0,
-      hasPosture: row.postureScore != null,
-      model: row.aiModelDisplay,
-      executor: row.executorEmail ?? row.executorName ?? "—",
-      application: row.applicationName,
-      fill: `hsl(${(index * 67) % 360} 70% 50%)`,
-    }));
-  }, [selectedRows]);
+    return selectedRows.map((row, index) => {
+      const label = comparisonLabel(row);
+      return {
+        id: row.analysisId,
+        label,
+        shortLabel: label.length > 22 ? `${label.slice(0, 20)}…` : label,
+        posture: row.postureScore ?? 0,
+        hasPosture: row.postureScore != null,
+        model: row.aiModelDisplay,
+        executor: row.executorEmail ?? row.executorName ?? "—",
+        application: row.applicationName,
+        fill: `hsl(${(index * 67) % 360} 70% 50%)`,
+      };
+    });
+  }, [selectedRows, comparisonLabel]);
 
   const applicationOptions = useMemo(() => {
     if (!analyses) return [];
@@ -308,7 +264,7 @@ export default function AdminAnalyses() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <ShieldAlert className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground font-mono">Acesso restrito a administradores.</p>
+            <p className="text-muted-foreground font-mono">{t("common.adminOnly")}</p>
           </div>
         </div>
       </DashboardLayout>
@@ -339,11 +295,9 @@ export default function AdminAnalyses() {
             <div>
               <h1 className="text-xl font-bold text-foreground font-mono flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-cyan-500" />
-                Análises — visão global
+                {t("adminAnalyses.title")}
               </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Redimensione colunas, filtre por campo e compare 2+ análises em gráfico.
-              </p>
+              <p className="text-sm text-muted-foreground mt-0.5">{t("adminAnalyses.subtitle")}</p>
             </div>
           </div>
 
@@ -353,7 +307,7 @@ export default function AdminAnalyses() {
               onClick={() => setShowCompareChart((v) => !v)}
             >
               <BarChart3 className="w-4 h-4 mr-2" />
-              {showCompareChart ? "Ocultar" : "Comparar"} ({selectedIds.size})
+              {showCompareChart ? t("adminAnalyses.hideCompare") : t("adminAnalyses.compare")} ({selectedIds.size})
             </Button>
           )}
         </div>
@@ -361,11 +315,11 @@ export default function AdminAnalyses() {
         <div className="flex flex-wrap gap-3 items-center">
           <Select value={applicationFilter} onValueChange={setApplicationFilter}>
             <SelectTrigger className="w-56 font-mono text-sm">
-              <SelectValue placeholder="Aplicação" />
+              <SelectValue placeholder={t("common.application")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="font-mono text-sm">
-                Todas as aplicações
+                {t("adminAnalyses.allApps")}
               </SelectItem>
               {applicationOptions.map(([id, name]) => (
                 <SelectItem key={id} value={String(id)} className="font-mono text-sm">
@@ -377,11 +331,11 @@ export default function AdminAnalyses() {
           <Input
             value={baseUrlFilter}
             onChange={(e) => setBaseUrlFilter(e.target.value)}
-            placeholder="URL base (exata)"
+            placeholder={t("adminAnalyses.baseUrlPlaceholder")}
             className="max-w-xs font-mono text-sm"
           />
           <Button variant="outline" size="sm" className="font-mono text-xs" onClick={clearFilters}>
-            Limpar filtros
+            {t("adminAnalyses.clearFilters")}
           </Button>
           {selectedIds.size > 0 && (
             <Button
@@ -394,7 +348,7 @@ export default function AdminAnalyses() {
               }}
             >
               <X className="w-3 h-3 mr-1" />
-              Desmarcar ({selectedIds.size})
+              {t("adminAnalyses.deselect", { count: selectedIds.size })}
             </Button>
           )}
         </div>
@@ -403,13 +357,11 @@ export default function AdminAnalyses() {
           <div className="bg-card border border-border rounded-xl p-5 space-y-4">
             <div>
               <h2 className="text-sm font-mono font-semibold text-foreground">
-                Comparação de postura — {selectedRows.length} análises
+                {t("adminAnalyses.comparisonTitle", { count: selectedRows.length })}
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                Análises sem score concluído aparecem com 0% (em andamento).
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t("adminAnalyses.comparisonHint")}</p>
             </div>
-            <ChartContainer config={COMPARE_CHART_CONFIG} className="h-[280px] w-full">
+            <ChartContainer config={compareChartConfig} className="h-[280px] w-full">
               <BarChart data={comparisonData} margin={{ top: 8, right: 8, left: 0, bottom: 48 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
@@ -434,7 +386,7 @@ export default function AdminAnalyses() {
                     <ChartTooltipContent
                       formatter={(value, _name, item) => (
                         <span className="font-mono">
-                          {item.payload.hasPosture ? `${value}%` : "Sem score (em andamento)"}
+                          {item.payload.hasPosture ? `${value}%` : t("adminAnalyses.noScore")}
                         </span>
                       )}
                       labelFormatter={(_label, payload) => {
@@ -444,7 +396,9 @@ export default function AdminAnalyses() {
                           <div className="space-y-0.5 text-xs font-mono">
                             <p>{p.executor}</p>
                             <p className="text-muted-foreground">{p.application}</p>
-                            <p className="text-muted-foreground">Modelo: {p.model}</p>
+                            <p className="text-muted-foreground">
+                              {t("adminAnalyses.modelTooltip", { model: p.model })}
+                            </p>
                           </div>
                         );
                       }}
@@ -467,7 +421,9 @@ export default function AdminAnalyses() {
                   <p className="text-foreground truncate">{item.label}</p>
                   <p className="text-muted-foreground truncate">{item.application}</p>
                   <p className={item.hasPosture ? "text-cyan-500" : "text-muted-foreground"}>
-                    Postura: {item.hasPosture ? `${item.posture}%` : "—"}
+                    {t("adminAnalyses.postureValue", {
+                      value: item.hasPosture ? `${item.posture}%` : "—",
+                    })}
                   </p>
                 </div>
               ))}
@@ -477,42 +433,45 @@ export default function AdminAnalyses() {
 
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground font-mono">
-            <Loader2 className="w-4 h-4 animate-spin" /> Carregando análises...
+            <Loader2 className="w-4 h-4 animate-spin" /> {t("adminAnalyses.loading")}
           </div>
         ) : !analyses?.length ? (
-          <p className="text-sm text-muted-foreground font-mono">Nenhuma análise encontrada.</p>
+          <p className="text-sm text-muted-foreground font-mono">{t("adminAnalyses.empty")}</p>
         ) : (
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <p className="text-xs text-muted-foreground font-mono px-4 py-2 border-b border-border">
-              {filteredRows.length} de {analyses.length} análise(s) · arraste a borda da coluna para
-              redimensionar
+              {t("adminAnalyses.rowCount", { filtered: filteredRows.length, total: analyses.length })}
+              {" · "}
+              {t("common.tableResizeHint")}
             </p>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm font-mono" style={{ tableLayout: "fixed", minWidth: "100%" }}>
-                <colgroup>
-                  {(Object.keys(DEFAULT_WIDTHS) as ColumnKey[]).map((col) => (
-                    <col key={col} style={{ width: widths[col] }} />
-                  ))}
-                </colgroup>
+              <ResizableTable className="text-sm font-mono">
+                <ResizableColGroup
+                  columns={Object.keys(DEFAULT_WIDTHS) as ColumnKey[]}
+                  widths={widths}
+                />
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                    {(Object.keys(COLUMN_LABELS) as ColumnKey[]).map((col) => (
-                      <th key={col} className="relative p-0 font-medium select-none">
-                        <div className="p-3 pr-4 flex items-center gap-2 min-h-[2.5rem]">
-                          {col === "select" ? (
-                            <Checkbox
-                              checked={allFilteredSelected}
-                              onCheckedChange={(c) => toggleAllFiltered(c === true)}
-                              aria-label="Selecionar todos filtrados"
-                            />
-                          ) : (
-                            <span className="truncate">{COLUMN_LABELS[col]}</span>
-                          )}
-                        </div>
-                        {col !== "select" && col !== "actions" && (
-                          <ResizeHandle onResizeStart={(x) => onResizeStart(col, x)} />
+                    {(Object.keys(columnLabels) as ColumnKey[]).map((col) => (
+                      <ResizableTh
+                        key={col}
+                        resizable={col !== "select" && col !== "actions"}
+                        onResizeStart={
+                          col !== "select" && col !== "actions"
+                            ? (x) => onResizeStart(col, x)
+                            : undefined
+                        }
+                      >
+                        {col === "select" ? (
+                          <Checkbox
+                            checked={allFilteredSelected}
+                            onCheckedChange={(c) => toggleAllFiltered(c === true)}
+                            aria-label={t("adminAnalyses.selectAllFiltered")}
+                          />
+                        ) : (
+                          <span className="truncate">{columnLabels[col]}</span>
                         )}
-                      </th>
+                      </ResizableTh>
                     ))}
                   </tr>
                   <tr className="border-b border-border bg-muted/20">
@@ -524,7 +483,9 @@ export default function AdminAnalyses() {
                           onChange={(e) =>
                             setColumnFilters((prev) => ({ ...prev, [key]: e.target.value }))
                           }
-                          placeholder={`Filtrar ${COLUMN_LABELS[key].toLowerCase()}…`}
+                          placeholder={t("adminAnalyses.filterPlaceholder", {
+                            column: columnLabels[key].toLowerCase(),
+                          })}
                           className="h-7 text-[10px] font-mono px-2"
                         />
                       </th>
@@ -539,7 +500,7 @@ export default function AdminAnalyses() {
                         colSpan={9}
                         className="p-8 text-center text-sm text-muted-foreground"
                       >
-                        Nenhum resultado para os filtros atuais.
+                        {t("adminAnalyses.noResults")}
                       </td>
                     </tr>
                   ) : (
@@ -554,13 +515,13 @@ export default function AdminAnalyses() {
                           <Checkbox
                             checked={selectedIds.has(row.analysisId)}
                             onCheckedChange={(c) => toggleRow(row.analysisId, c === true)}
-                            aria-label={`Selecionar análise ${row.analysisTitle}`}
+                            aria-label={t("adminAnalyses.selectAnalysis", { title: row.analysisTitle })}
                           />
                         </td>
                         <td className="p-3 overflow-hidden">
                           <p className="text-foreground truncate">{row.analysisTitle}</p>
                           <p className="text-[10px] text-muted-foreground">
-                            {new Date(row.startedAt).toLocaleDateString("pt-BR")}
+                            {formatLocaleDate(locale, row.startedAt)}
                           </p>
                         </td>
                         <td className="p-3 text-xs overflow-hidden">
@@ -577,26 +538,26 @@ export default function AdminAnalyses() {
                           {row.applicationOwnerEmail ?? row.applicationOwnerName ?? "—"}
                         </td>
                         <td className="p-3 text-xs overflow-hidden">
-                          {row.aiModelDisplay !== "Não configurado" ? (
+                          {row.aiModelDisplay !== notConfigured ? (
                             <div className="space-y-0.5">
                               <Badge variant="outline" className="text-[10px] truncate max-w-full">
                                 {row.aiModelDisplay}
                               </Badge>
                               {row.latestAiMode && (
                                 <p className="text-muted-foreground truncate">
-                                  {formatModeLabel(row.latestAiMode)}
+                                  {labels.aiMode(row.latestAiMode)}
                                 </p>
                               )}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">Não configurado</span>
+                            <span className="text-muted-foreground">{notConfigured}</span>
                           )}
                         </td>
                         <td className="p-3 text-xs">
                           {row.postureScore != null ? `${row.postureScore}%` : "—"}
                         </td>
                         <td className="p-3 text-xs">
-                          {STATUS_LABELS[row.analysisStatus] ?? row.analysisStatus}
+                          {labels.analysisStatus(row.analysisStatus)}
                         </td>
                         <td className="p-3">
                           <div className="flex gap-1">
@@ -606,7 +567,7 @@ export default function AdminAnalyses() {
                               className="h-7 text-xs px-2"
                               onClick={() => navigate(`/analyses/${row.analysisId}/checklist`)}
                             >
-                              Abrir
+                              {t("common.open")}
                             </Button>
                             <Button
                               variant="ghost"
@@ -622,7 +583,7 @@ export default function AdminAnalyses() {
                     ))
                   )}
                 </tbody>
-              </table>
+              </ResizableTable>
             </div>
           </div>
         )}

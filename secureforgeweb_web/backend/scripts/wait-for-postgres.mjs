@@ -3,12 +3,9 @@
  * Uso: node backend/scripts/wait-for-postgres.mjs
  */
 import pg from "pg";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+import { loadProjectEnv } from "./loadProjectEnv.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+loadProjectEnv(import.meta.url);
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {

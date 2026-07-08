@@ -2,9 +2,6 @@
  * Must be the first import of the server entry so process.env is populated
  * before any module reads ENV (ESM hoists static imports).
  */
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+import { loadProjectEnv } from "../../shared/loadProjectEnv.js";
 
-const dir = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(dir, "../../../.env") });
+loadProjectEnv(import.meta.url);

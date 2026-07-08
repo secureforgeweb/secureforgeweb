@@ -85,6 +85,7 @@ function makeCtx(user?: Partial<AuthUser>): TrpcContext {
       _setCookies: setCookies,
       _clearedCookies: clearedCookies,
     } as unknown as TrpcContext["res"],
+    locale: "pt",
   } as TrpcContext;
 }
 

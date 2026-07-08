@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
 type BrandLogoProps = {
   variant?: "icon" | "full";
@@ -13,6 +14,8 @@ export default function BrandLogo({
   iconClassName,
   showSubtitle = true,
 }: BrandLogoProps) {
+  const { t } = useLocale();
+
   if (variant === "icon") {
     return (
       <img
@@ -34,7 +37,7 @@ export default function BrandLogo({
       <div className="min-w-0">
         <p className="font-bold text-sm font-mono text-foreground truncate">SecureForge Web</p>
         {showSubtitle && (
-          <p className="text-xs text-muted-foreground font-mono truncate">Diagnóstico & Hardening</p>
+          <p className="text-xs text-muted-foreground font-mono truncate">{t("brand.subtitle")}</p>
         )}
       </div>
     </div>

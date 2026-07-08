@@ -44,6 +44,10 @@ export type AiAssessmentItemCode = (typeof AI_ASSESSMENT_ITEM_CODES)[number];
 export type AiAssessmentItemInput = {
   id: number;
   code: string;
+  essentialCode?: string | null;
+  asvsId?: string | null;
+  verificationLevel?: number | null;
+  sectionName?: string | null;
   title: string;
   description: string;
 };
@@ -446,7 +450,7 @@ export function buildFullChecklistAiSuggestions(
   items: AiAssessmentItemInput[]
 ): AutoAssessmentSuggestion[] {
   const map = new Map<string, AutoAssessmentSuggestion>();
-  const itemRefs = items.map((i) => ({ id: i.id, code: i.code }));
+  const itemRefs = items.map((i) => ({ id: i.id, code: i.essentialCode ?? i.code }));
 
   const merge = (list: AutoAssessmentSuggestion[]) => {
     for (const s of list) {
@@ -503,15 +507,16 @@ export function assessAiItemsHeuristic(
   const suggestions: AutoAssessmentSuggestion[] = [];
 
   for (const item of items) {
-    if (!codeSet.has(item.code)) continue;
-    const assessed = assessHeuristicItem(item.code as AiAssessmentItemCode, ctx);
+    const automationCode = item.essentialCode ?? item.code;
+    if (!codeSet.has(automationCode)) continue;
+    const assessed = assessHeuristicItem(automationCode as AiAssessmentItemCode, ctx);
     suggestions.push({
       itemId: item.id,
       itemCode: item.code,
       ...assessed,
       source: "ai",
       artifacts: enrichSuggestionArtifacts({
-        itemCode: item.code,
+        itemCode: automationCode,
         evidence: assessed.evidence,
         rationale: assessed.rationale,
         gitSnapshot: ctx.gitSnapshot,
@@ -522,6 +527,15 @@ export function assessAiItemsHeuristic(
   }
 
   return suggestions;
+}
+
+function formatItemForPrompt(item: AiAssessmentItemInput): string {
+  if (item.asvsId) {
+    const level = item.verificationLevel ? ` (Nível ASVS ${item.verificationLevel})` : "";
+    const section = item.sectionName ? ` — ${item.sectionName}` : "";
+    return `- ${item.asvsId}${level}${section}\n  Requisito oficial OWASP ASVS: ${item.description}`;
+  }
+  return `- ${item.code}: ${item.title} — ${item.description}`;
 }
 
 function buildLlmPrompt(ctx: AiAssessmentContext, items: AiAssessmentItemInput[]): string {
@@ -537,13 +551,13 @@ function buildLlmPrompt(ctx: AiAssessmentContext, items: AiAssessmentItemInput[]
         .join("\n")
     : "Não disponível";
 
-  const itemList = items
-    .map((i) => `- ${i.code}: ${i.title} — ${i.description}`)
-    .join("\n");
+  const itemList = items.map((i) => formatItemForPrompt(i)).join("\n");
 
   return [
     "Você é um assistente AppSec avaliando controles de hardening web.",
-    "Com base APENAS nas evidências abaixo, sugira conformidade para cada item.",
+    "Com base APENAS nas evidências abaixo, sugira conformidade para cada item listado.",
+    "Use o campo itemCode exatamente como aparece no identificador do item (ex.: V3.4.1 ou AUTH-01).",
+    "Para requisitos ASVS, avalie o texto oficial do requisito OWASP, não apenas o título.",
     "Se não houver evidência suficiente, use parcial ou nao_aplicavel e confidence <= 65.",
     "Responda SOMENTE JSON válido no formato: {\"suggestions\":[{\"itemCode\",\"compliance\",\"confidence\",\"evidence\",\"rationale\"}]}",
     "",

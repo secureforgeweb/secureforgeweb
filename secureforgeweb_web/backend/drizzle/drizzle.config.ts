@@ -1,10 +1,11 @@
-import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { defineConfig } from "drizzle-kit";
+// @ts-expect-error mjs helper without type declarations
+import { loadProjectEnv } from "../scripts/loadProjectEnv.mjs";
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(dir, "../../.env") });
+loadProjectEnv(import.meta.url);
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {

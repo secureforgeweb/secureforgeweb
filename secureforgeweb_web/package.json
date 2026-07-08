@@ -24,7 +24,9 @@
     "db:push": "pnpm db:migrate",
     "db:wait": "node backend/scripts/wait-for-postgres.mjs",
     "db:seed": "node backend/scripts/seed_checklist.mjs",
-    "db:setup": "pnpm db:wait && pnpm db:push && pnpm db:seed"
+    "db:import-asvs": "tsx backend/scripts/import-asvs.ts",
+    "db:sync-asvs": "tsx backend/scripts/sync-asvs.ts",
+    "db:setup": "pnpm db:wait && pnpm db:push && pnpm db:seed && pnpm db:import-asvs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",

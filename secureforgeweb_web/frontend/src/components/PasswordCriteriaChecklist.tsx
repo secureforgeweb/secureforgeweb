@@ -1,10 +1,12 @@
 import { Check, X } from "lucide-react";
 import { checkPasswordCriteria } from "@/lib/password";
+import { useLocale } from "@/contexts/ChecklistLocaleContext";
 
 export default function PasswordCriteriaChecklist({ password }: { password: string }) {
+  const { t } = useLocale();
   if (!password) return null;
 
-  const criteria = checkPasswordCriteria(password);
+  const criteria = checkPasswordCriteria(password, t);
 
   return (
     <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-border/50 space-y-1.5">
