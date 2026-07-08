@@ -3,8 +3,8 @@
 **Disciplina:** Projeto Integrador — Desenvolvimento de Ferramentas de Segurança Aplicada  
 **Ferramenta:** SecureForge Web — *Plataforma de Diagnóstico e Hardening de Aplicações Web*  
 **Codinome do projeto:** AppHardener  
-**Período documentado:** 15/06/2026 — 30/06/2026  
-**Versão do documento:** 4.0 (consolidado)  
+**Período documentado:** 15/06/2026 — 07/07/2026  
+**Versão do documento:** 5.0 (ASVS + i18n + UX admin)  
 **Repositório:** [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) · pacote `secureforgeweb_web`
 
 ---
@@ -34,7 +34,7 @@ A equipe demonstrou:
 
 | Integrante | Papel | Responsabilidades principais |
 |---|---|---|
-| **Josias da Silva Bentes** | Analista de Banco de Dados | Schema Drizzle, migrações (`0010`–`0017`), seed OWASP, scripts de banco |
+| **Josias da Silva Bentes** | Analista de Banco de Dados | Schema Drizzle, migrações (`0010`–`0019`), seed OWASP/ASVS, scripts de banco |
 | **Keven Coimbra** | Analista Desenvolvedor Backend | Routers tRPC, assessores automáticos, `aiAssistant`, validação, testes de API |
 | **Nattan Lobato** | Analista Desenvolvedor Backend | Auth, RBAC, middleware, models `*.db.ts`, resolução de modelo IA por executor |
 | **Margefson Barros** | Analista Frontend e Integrador | Telas React, wizard, admin benchmark, documentação, integração entre camadas |
@@ -58,17 +58,15 @@ O projeto **AppHardener** orienta o desenvolvimento de ferramentas para equipes 
 
 ## 3. Evolução do projeto
 
-| Aspecto | 15/06 — Planejamento | 16/06 — Base funcional | 30/06 — Consolidação |
-|---|---|---|---|
-| Natureza | Modelagem e arquitetura inicial | Sistema executável localmente | Núcleo operacional ponta a ponta |
-| Cadastro de aplicações | Planejado (RF01) | URL **ou** repo Git obrigatório | Admin vê todas as apps |
-| Checklist OWASP | Seed planejado | 24 itens / 9 categorias | Mantido + admin |
-| Fluxo de análise | Descrito | Wizard com salvamento parcial | + registro de runs automáticos |
-| Achados / dashboard / PDF | Fases planejadas | Implementados | Consolidados |
-| Automação | Fora do MVP inicial | HTTP, Git, IA (config global) | IA **por usuário** + benchmark admin |
-| Migrações Drizzle | — | `0010`–`0014` | `0015` (config IA), `0016` (runs), `0017` (evidências) |
-| Assistente IA | Opcional futuro | `.env` / arquivo global | Perfil `/profile/ai-assistant` |
-| Admin | Usuários + checklist | Idem | **Análises globais** + gráfico comparativo |
+| Aspecto | 15/06 — Planejamento | 16/06 — Base funcional | 30/06 — Consolidação | 07/07 — ASVS + i18n |
+|---|---|---|---|---|
+| Natureza | Modelagem e arquitetura inicial | Sistema executável localmente | Núcleo operacional ponta a ponta | Catálogo ASVS 5.0 + UI bilíngue |
+| Checklist | Seed planejado | 24 itens / 9 categorias | Mantido + admin | + ASVS L1 e Complete (~345 itens) |
+| Idioma | PT apenas | PT apenas | PT apenas | **PT/EN** UI + erros backend |
+| Admin checklist | Ajuste de severidade | Lista por categoria | Idem | Tabela com busca, capítulos, colunas redimensionáveis |
+| Admin análises | — | — | Benchmark gráfico | + colunas redimensionáveis persistidas |
+| UX layout | — | Sidebar fixa | Idem | Sidebar recolhível (`Ctrl+B`) |
+| Migrações Drizzle | — | `0010`–`0014` | `0015`–`0017` | **`0018`** (ASVS), **`0019`** (i18n checklist) |
 
 ### Contribuição por fase (cronograma interno)
 
@@ -82,6 +80,9 @@ O projeto **AppHardener** orienta o desenvolvimento de ferramentas para equipes 
 | F5 | Refinamento e documentação | Concluída |
 | Pós-MVP | Análises HTTP, Git e assistente IA | Concluída |
 | F6 | IA por usuário + admin benchmark | Concluída |
+| F7 | Catálogo ASVS 5.0 (import/sync) + wizard ASVS | Concluída |
+| F8 | i18n PT/EN (frontend + backend) | Concluída |
+| F9 | UX admin (tabelas redimensionáveis, sidebar, checklist) | Concluída |
 
 ---
 
@@ -95,21 +96,22 @@ Avaliar e melhorar a **postura de segurança** de aplicações web por meio de c
 
 | Incluído | Excluído |
 |---|---|
-| Checklist guiado OWASP (24 itens, 9 categorias) | Scanner profissional / DAST completo |
+| Checklist Essential v1.0 (24 itens) + **OWASP ASVS 5.0** (L1 / Complete) | Scanner profissional / DAST completo |
 | Cadastro de aplicações (URL e/ou repositório Git) | Pentest automatizado |
 | Achados com severidade, status e histórico | Integração SIEM / SOC em tempo real |
 | Recomendações de hardening por item | Machine Learning para classificação |
 | Dashboard + relatório PDF | Análise estática profunda (SAST enterprise) |
 | Análise **assistida** (HTTP, Git, IA) com revisão humana | Veredicto 100% automático |
 | Assistente IA **por usuário** (OpenAI, Gemini, Azure, custom) | Configuração global única de LLM |
-| Admin: visão global + benchmark gráfico de postura | Comparação de latência/custo de API |
+| Interface **PT/EN** + erros de API localizados | N/A |
+| Admin: visão global + benchmark + tabelas redimensionáveis | Comparação de latência/custo de API |
 
 ### 4.3 Capacidades do MVP — status final
 
 | # | Capacidade | Status |
 |---|---|---|
 | 1 | Cadastrar aplicação web | Concluído |
-| 2 | Iniciar análise e percorrer checklist v1.0 | Concluído |
+| 2 | Iniciar análise e percorrer checklist (Essential ou ASVS) | Concluído |
 | 3 | Registrar conformidade + observações | Concluído |
 | 4 | Gerar achados a partir de não conformidades | Concluído |
 | 5 | Visualizar recomendações de correção | Concluído |
@@ -117,7 +119,11 @@ Avaliar e melhorar a **postura de segurança** de aplicações web por meio de c
 | 7 | Consultar dashboard de postura | Concluído |
 | 8 | Exportar relatório PDF | Concluído |
 | 9 | Configurar assistente IA por usuário | Concluído |
-| 10 | Admin: comparar análises entre operadores/modelos | Concluído |
+| 10 | Análises automáticas assistidas (HTTP, Git, IA) | Concluído |
+| 11 | Admin: comparar análises entre operadores/modelos | Concluído |
+| 12 | Múltiplos catálogos de checklist (Essential + ASVS) | Concluído |
+| 13 | Interface bilíngue PT/EN | Concluído |
+| 14 | Tabelas admin com colunas redimensionáveis | Concluído |
 
 ### 4.4 Funcionando ponta a ponta
 
@@ -176,6 +182,9 @@ Avaliar e melhorar a **postura de segurança** de aplicações web por meio de c
 | Assistente IA por usuário (perfil) | Concluído |
 | Admin: análises globais + benchmark | Concluído |
 | Registro de execuções automáticas | Concluído |
+| Import/sync OWASP ASVS 5.0 | Concluído |
+| i18n checklist (titlePt, capítulos PT) | Concluído |
+| Erros tRPC localizados (`x-locale`) | Concluído |
 
 ### 5.3 Análises automáticas assistidas
 
@@ -183,7 +192,7 @@ Avaliar e melhorar a **postura de segurança** de aplicações web por meio de c
 |---|---|---|
 | **Headers HTTP** | `checklistAssessor.ts` | HEADER-01 a 04, DATA-01 |
 | **Repositório Git** | `gitRepoAssessor.ts` | AUTH, AUTHZ, INPUT, SECRET, ERROR (14 itens) |
-| **Assistente IA** | `aiChecklistAssessor.ts` | Checklist completo (24 itens) — HTTP + Git + heurísticas + LLM do **usuário logado** |
+| **Assistente IA** | `aiChecklistAssessor.ts` | Essential (24 itens) + itens ASVS selecionados — HTTP + Git + LLM do **usuário logado** |
 
 Execução por categoria ou por item via `analyses.runAutoAssessment` (`itemIds`). Cada execução registrada em `analysis_assessment_runs`.
 
@@ -195,13 +204,14 @@ Execução por categoria ou por item via `analyses.runAutoAssessment` (`itemIds`
 
 Aplicação web **monolítica modular** em monorepo (`secureforgeweb_web/`):
 
-- **Apresentação:** SPA React (wizard, dashboard, admin, config IA no perfil);
+- **Apresentação:** SPA React (wizard, dashboard, admin, i18n, config IA no perfil);
 - **Aplicação:** Express + tRPC (routers `applications`, `analyses`, `findings`, `reports`, `aiAssistant`, `admin`);
-- **Serviços:** PDF (PDFKit), assessores HTTP/Git/IA;
+- **Serviços:** PDF (PDFKit), assessores HTTP/Git/IA, **asvsCatalog** (import/sync ASVS);
+- **Shared:** `apiErrors`, `checklistLocale`, `requestLocale`, `asvsAutomationMap`;
 - **Domínio:** Aplicação → Análise → Resposta → Achado → Recomendação;
 - **Persistência:** PostgreSQL 16 + Drizzle ORM + migrações versionadas.
 
-Comunicação **type-safe** via tRPC. Catálogo OWASP carregado via seed.
+Comunicação **type-safe** via tRPC. Catálogos: seed Essential v1.0 + import ASVS via `db:import-asvs`.
 
 ### 6.2 Diagrama
 
@@ -279,20 +289,22 @@ erDiagram
 |---|---|
 | **applications** | `name`, `baseUrl`, `repositoryUrl`, `techStack`, `description` |
 | **analyses** | `applicationId`, `userId`, `checklistId`, `status`, datas |
-| **checklist_items** | `code`, `title`, `description`, `owaspRef`, `suggestedSeverity` |
+| **checklist_items** | `code`, `title`, `titlePt`, `description`, `owaspRef`, `verificationLevel`, `essentialCode`, `suggestedSeverity` |
 | **checklist_responses** | `analysisId`, `itemId`, `compliance`, `notes` |
 | **findings** | `severity`, `priority`, `status`, `evidence`, recomendações |
 | **user_ai_assistant_configs** | `userId`, `provider`, `apiKey`, `model`, `baseUrl`, `enabled` |
 | **analysis_assessment_runs** | `analysisId`, `userId`, `scope`, `assessmentMode`, `provider`, `assessedAt` |
 
-**Migrações:** `0010` (aplicações e checklist) → `0014` (`repositoryUrl`) → `0015` (IA por usuário) → `0016` (runs) → `0017` (evidências por item).
+**Migrações:** `0010` (aplicações e checklist) → `0014` (`repositoryUrl`) → `0015` (IA por usuário) → `0016` (runs) → `0017` (evidências) → **`0018`** (metadados ASVS) → **`0019`** (i18n checklist).
 
 ### 6.4 Módulos principais
 
 | Módulo | Responsabilidade |
 |---|---|
 | Gestão de Aplicações | CRUD, URL/repo Git; admin vê todas |
-| Motor de Checklist | OWASP v1.0 — 9 categorias, 24 itens |
+| Motor de Checklist | Essential v1.0 + **ASVS 5.0** (L1 / Complete); sync remoto |
+| i18n | `messages.ts`, `ChecklistLocaleContext`, `apiErrors`, header `x-locale` |
+| UX admin | `useResizableColumns`, sidebar recolhível, checklist em tabela |
 | Motor de Análises | Wizard, respostas, conclusão, runs |
 | Gestão de Achados | CRUD, status, histórico, evidências |
 | Motor de Recomendações | Catálogo padrão + vínculo por achado |
@@ -416,6 +428,7 @@ pnpm dev
 | `checklistAssessor.test.ts` | 9 |
 | `gitRepoAssessor.test.ts` | 6 |
 | `aiChecklistAssessor.test.ts` | 8 |
+| `asvsPtCatalog.test.ts` | merge PT ASVS |
 | `aiAssistantConfig.test.ts` | 5 |
 | `security.test.ts` | 34 |
 
@@ -432,6 +445,9 @@ pnpm dev
 | Config IA global (`.env`) | Config **por usuário** no PostgreSQL | Múltiplos operadores |
 | Admin sem visão global | Todas aplicações e análises + benchmark | Governança e comparação |
 | Sem registro de execução | `analysis_assessment_runs` | Rastreabilidade |
+| Checklist único local | Catálogo **ASVS 5.0** importável/sync | Alinhamento OWASP oficial |
+| UI monolingue | **i18n PT/EN** + erros backend localizados | Operadores internacionais |
+| Tabelas admin fixas | Colunas **redimensionáveis** (localStorage) | Preferência do analista |
 
 O **problema central** (hardening guiado de aplicações web) permaneceu inalterado.
 
@@ -441,15 +457,17 @@ O **problema central** (hardening guiado de aplicações web) permaneceu inalter
 
 | Documento | Conteúdo |
 |---|---|
+| [`readme-web.md`](../readme-web.md) | Setup operacional e scripts |
 | `PROJETO_ARQUITETURAL.md` | Arquitetura alvo e requisitos |
 | `MANUAL.md` | Manual de uso |
+| `docs/screenshots/` | Capturas de tela do protótipo |
 | `docs/assets/github-avatar.png` | Avatar do perfil GitHub |
 
 ---
 
 ## 12. Conclusão
 
-A **SecureForge Web** atende ao perfil **AppHardener**: ferramenta **leve, guiada e orientada à correção** para diagnóstico e hardening de aplicações web. O estado atual (30/06/2026) consolida o fluxo principal ponta a ponta, suporte multiusuário com IA independente por perfil, governança administrativa e comparação visual entre operadores e modelos — evolução documentada desde o planejamento de 15/06 até a implementação completa demonstrável.
+A **SecureForge Web** atende ao perfil **AppHardener**: ferramenta **leve, guiada e orientada à correção** para diagnóstico e hardening de aplicações web. O estado atual (julho/2026) consolida o fluxo principal ponta a ponta, catálogo **OWASP ASVS 5.0**, interface **bilíngue**, suporte multiusuário com IA independente por perfil, governança administrativa e comparação visual entre operadores e modelos — evolução documentada desde o planejamento de 15/06 até a implementação completa demonstrável.
 
 ---
 

@@ -105,11 +105,12 @@ RELATED_WORK_BLOCKS: list[tuple[str, str]] = [
         "específica. A SecureForge Web ocupa nicho complementar: ferramenta operacional para "
         "equipes pequenas, laboratórios e projetos acadêmicos que necessitam de processo "
         "estruturado de revisão AppSec sem scanner enterprise. Em síntese, o trabalho se "
-        "diferencia por unir (i) checklist OWASP guiado com 24 itens em nove categorias; "
-        "(ii) três escopos de automação assistida com revisão humana obrigatória; "
-        "(iii) persistência de evidências auditáveis; (iv) dashboard e exportação PDF; "
-        "(v) configuração de IA por perfil e comparação administrativa entre análises — "
-        "combinação não encontrada de forma integrada nos trabalhos relacionados revisados.",
+        "diferencia por unir (i) checklists OWASP guiados — Essential v1.0 (24 itens) "
+        "e catálogo ASVS 5.0 (L1/Complete); (ii) três escopos de automação assistida "
+        "com revisão humana obrigatória; (iii) persistência de evidências auditáveis; "
+        "(iv) dashboard e exportação PDF; (v) configuração de IA por perfil, interface "
+        "bilíngue (PT/EN) e comparação administrativa entre análises — combinação não "
+        "encontrada de forma integrada nos trabalhos relacionados revisados.",
     ),
 ]
 

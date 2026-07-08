@@ -9,8 +9,19 @@ Documentação da entrega atual: [RELATORIO.md](RELATORIO.md)
 ## 1. Acesso ao sistema
 
 1. Acesse a URL do frontend (ex.: http://localhost:5173)
-2. Clique em **Criar Conta** ou **Entrar**
-3. Após login, você será redirecionado ao **Dashboard**
+2. No canto superior, escolha **PT** ou **EN** (disponível também antes do login)
+3. Clique em **Criar Conta** ou **Entrar**
+4. Após login, você será redirecionado ao **Dashboard**
+
+### Idioma e interface
+
+| Recurso | Onde |
+|---|---|
+| **Idioma PT/EN** | Home, Login, Registro e header autenticado |
+| **Tema claro/escuro** | Ícone de sol/lua no header |
+| **Menu lateral** | Botão no header ou atalho **Ctrl+B** (expandir/recolher) |
+
+Mensagens de erro da API (validação, login, admin) respeitam o idioma selecionado.
 
 ---
 
@@ -58,13 +69,18 @@ Cada usuário possui **configuração independente** de LLM. Não é compartilha
 
 1. Abra o detalhe da aplicação
 2. Clique em **Iniciar análise** (ou **Continuar análise**)
-3. No wizard, navegue pelas **9 categorias OWASP** (24 itens)
-4. Para cada item, selecione a conformidade:
+3. Se disponível, escolha o **checklist** na criação da análise:
+   - **Checklist Essential SecureForge** (v1.0) — 24 itens em 9 categorias (avaliação rápida)
+   - **OWASP ASVS 5.0 — Level 1** — subconjunto L1
+   - **OWASP ASVS 5.0 — Complete** — catálogo completo (~345 requisitos)
+4. No wizard, navegue pelas categorias/capítulos
+5. Para checklists **ASVS**, use **busca** e filtro por **nível** (L1/L2/L3)
+6. Para cada item, selecione a conformidade:
    - Conforme
    - Parcialmente conforme
    - Não conforme
    - Não aplicável
-5. Adicione observações quando relevante
+7. Adicione observações quando relevante
 
 ### Salvamento e navegação
 
@@ -75,7 +91,7 @@ Cada usuário possui **configuração independente** de LLM. Não é compartilha
 | **Trocar de aba** | Auto-save da categoria atual |
 | **Anterior** | Volta com salvamento automático |
 
-6. Após todas as categorias, clique em **Concluir e gerar achados**
+8. Após todas as categorias, clique em **Concluir e gerar achados**
 
 O histórico de análises no detalhe da aplicação mostra **quem executou** e o **modelo IA** configurado (quando aplicável).
 
@@ -156,9 +172,23 @@ Conteúdo: resumo executivo, severidade, plano de ação priorizado.
 |---|---|
 | Painel administrativo | `/admin` |
 | Gerenciar usuários e papéis | `/admin/users` |
-| Ajustar severidade dos itens OWASP | `/admin/checklist-items` |
+| Itens de checklist (Essential + ASVS) | `/admin/checklist-items` |
 | **Análises globais e benchmark** | `/admin/analyses` |
 | Configurar **seu** assistente IA | `/profile/ai-assistant` |
+
+### Itens de checklist (`/admin/checklist-items`)
+
+| Recurso | Uso |
+|---|---|
+| Seletor de checklist | Essential v1.0, ASVS L1 ou ASVS Complete |
+| **Sync ASVS** | Atualiza catálogos ASVS a partir da fonte OWASP |
+| Busca | ID, título, texto do requisito, ref., auto |
+| Filtros | Nível ASVS e severidade sugerida |
+| Navegação por capítulo | Sidebar esquerda — clique para ir ao capítulo |
+| Tabela compacta | Colunas redimensionáveis (arraste a borda do cabeçalho) |
+| Editar severidade | Botão **Editar** por item |
+
+Preferências de largura das colunas são salvas no navegador (`localStorage`).
 
 ### Análises globais (`/admin/analyses`)
 
@@ -169,7 +199,7 @@ Visão de **todas as análises de todos os usuários**:
 | Tabela completa | Executor, aplicação, dono, **modelo IA**, postura, status |
 | Filtro por aplicação / URL | Barra superior |
 | Filtro por coluna | Campos abaixo de cada cabeçalho |
-| Redimensionar colunas | Arrastar borda direita do cabeçalho |
+| Redimensionar colunas | Arrastar borda direita do cabeçalho (preferência salva localmente) |
 | Seleção múltipla | Checkbox em cada linha |
 | **Comparar** | Com 2+ selecionadas — gráfico de postura (%) |
 | Benchmark automático | Agrupa análises com a **mesma URL base** |
@@ -195,14 +225,15 @@ Admin pode abrir análises e aplicações de outros usuários (somente leitura o
 | Problema | Ação |
 |---|---|
 | API não responde | Verifique `pnpm dev` e `DATABASE_URL` no `.env` |
-| Checklist vazio | Execute `pnpm db:setup` |
+| Checklist vazio | Execute `pnpm db:setup` (seed + import ASVS) |
+| ASVS desatualizado | Admin → Checklist Items → **Sync ASVS** ou `pnpm db:sync-asvs` |
 | Botões de análise desabilitados | Cadastre URL base e/ou repositório Git |
 | Clone Git falha | Use repositório **público HTTPS** |
 | Assistente IA sem LLM | Configure em **Perfil → Assistente IA**; teste a conexão |
 | Erro HTTP 429 no teste | Cota excedida — adicione créditos ou troque provedor |
 | Modelo IA "Não configurado" | Salve config em `/profile/ai-assistant` |
 | Gráfico comparativo não aparece | Selecione 2+ análises → botão **Comparar** |
-| Score "—" | Conclua análise com todos os 24 itens |
+| Score "—" | Conclua análise com todos os itens do checklist escolhido |
 | PDF não baixa | Permissões de download do navegador |
 
 ---

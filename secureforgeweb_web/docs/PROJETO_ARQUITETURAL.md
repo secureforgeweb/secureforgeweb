@@ -2,10 +2,10 @@
 
 **Disciplina:** Projeto Integrador — Desenvolvimento de Ferramentas de Segurança Aplicada  
 **Trilha:** AppHardener  
-**Versão:** 1.2  
-**Data:** 30/06/2026
+**Versão:** 1.3  
+**Data:** 07/07/2026
 
-> Para o **estado operacional atual**, consulte [RELATORIO.md](RELATORIO.md) e [MANUAL.md](MANUAL.md). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark e migrações `0015`–`0016`.
+> Para o **estado operacional atual**, consulte [RELATORIO.md](RELATORIO.md) e [MANUAL.md](MANUAL.md). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
 
 ---
 
@@ -44,7 +44,8 @@ Desenvolver um protótipo funcional que permita:
 | Dentro do escopo | Fora do escopo |
 |---|---|
 | Cadastro e gestão de aplicações | Scanner profissional de vulnerabilidades |
-| Checklist guiado de controles | Crawling avançado / DAST completo |
+| Checklist guiado (Essential v1.0 e/ou **OWASP ASVS 5.0**) | Crawling avançado / DAST completo |
+| Interface bilíngue (PT/EN) | Outros idiomas além de PT/EN |
 | Registro e classificação de achados | Suíte completa de pentest |
 | Recomendações de hardening | Substituição de ferramentas enterprise |
 | Dashboard e relatório simples | Análise automatizada profunda de código |
@@ -300,6 +301,8 @@ O checklist é o núcleo do AppHardener. A versão inicial (`v1.0`) cobre catego
 
 Cada item possui: código (`AUTH-01`), título, descrição, referência OWASP/CWE quando aplicável e recomendação padrão associada.
 
+**Implementação atual (jul/2026):** além do catálogo **Essential v1.0** (24 itens), o sistema importa o **OWASP ASVS 5.0** (perfis Level 1 e Complete) via `pnpm db:import-asvs`, com sincronização administrativa (`Sync ASVS` / `pnpm db:sync-asvs`). Textos traduzidos (`titlePt`, capítulos) e interface **PT/EN** estão operacionais — ver [RELATORIO.md](RELATORIO.md).
+
 ---
 
 ## 6. Arquitetura de componentes
@@ -339,14 +342,14 @@ flowchart LR
 ### 6.2 Camadas e responsabilidades
 
 #### Camada de Apresentação (Frontend)
-- Telas: lista de aplicações, cadastro, wizard de checklist, painel de achados, dashboard, relatório.
-- Comunicação via API REST.
-- Validação básica de formulários no cliente.
+- Telas: lista de aplicações, cadastro, wizard de checklist, painel de achados, dashboard, relatório, admin.
+- Comunicação via **tRPC** (`/api/trpc`) com header `x-locale` para i18n.
+- Validação básica de formulários no cliente; preferências de UI (tema, sidebar, larguras de coluna) em cookie/localStorage.
 
 #### Camada de Aplicação (Backend / API)
-- Orquestra casos de uso.
-- Aplica regras de negócio (geração automática de achados, cálculo de progresso).
-- Expõe endpoints REST versionados (`/api/v1/...`).
+- Orquestra casos de uso via routers tRPC (implementação atual).
+- Aplica regras de negócio (geração automática de achados, cálculo de progresso, assessores HTTP/Git/IA).
+- A tabela REST em §8 descreve contratos lógicos equivalentes; a API exposta é tRPC, não `/api/v1/...`.
 
 #### Camada de Domínio
 - Entidades, enums, serviços de domínio puros.
@@ -390,7 +393,7 @@ flowchart TB
 
 ### UC02 — Iniciar análise de segurança
 **Ator:** Desenvolvedor / Analista  
-**Fluxo:** seleciona aplicação → escolhe checklist v1.0 → análise criada em status `EM_ANDAMENTO`.
+**Fluxo:** seleciona aplicação → escolhe checklist (**Essential v1.0**, **ASVS L1** ou **ASVS Complete**) → análise criada em status `EM_ANDAMENTO`.
 
 ### UC03 — Responder checklist
 **Ator:** Desenvolvedor / Analista  
@@ -613,11 +616,19 @@ Alinhado à disciplina com entregas parciais:
 
 ## 17. Evoluções futuras (pós-protótipo)
 
-- Integração com análise passiva de headers HTTP (fetch da URL cadastrada).
-- Comparativo entre versões de análise (maturidade ao longo do tempo).
+Itens já entregues no protótipo atual (jul/2026) — ver [RELATORIO.md](RELATORIO.md):
+
+- Análise passiva de headers HTTP e análise estática de repositório Git.
+- Assistente IA por usuário (OpenAI, Gemini, Azure, custom).
+- Admin: visão global de análises, benchmark gráfico, tabelas redimensionáveis.
+- Catálogo **OWASP ASVS 5.0** importável/sincronizável; interface **PT/EN**.
+
+Evoluções ainda previstas:
+
+- Comparativo longitudinal entre versões de análise (maturidade ao longo do tempo).
 - Templates de checklist por tipo de app (API REST, SPA, monólito).
-- Exportação para formatos usados em auditorias.
-- Submissão ao Salão de Ferramentas do SBSeg.
+- Exportação para formatos usados em auditorias externas.
+- Pipeline CI/CD automatizado; vídeo demo formal.
 
 ---
 
