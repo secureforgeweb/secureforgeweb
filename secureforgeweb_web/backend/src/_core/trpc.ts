@@ -4,8 +4,25 @@ import superjson from "superjson";
 import { throwApiError } from "../lib/trpcErrors.js";
 import type { TrpcContext } from "./context";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
+  errorFormatter({ shape, error }) {
+    if (!isProduction) return shape;
+    // Never leak stacks or internal details to clients in production.
+    return {
+      ...shape,
+      message:
+        error.code === "INTERNAL_SERVER_ERROR"
+          ? "Erro interno do servidor."
+          : shape.message,
+      data: {
+        ...shape.data,
+        stack: undefined,
+      },
+    };
+  },
 });
 
 export const router = t.router;

@@ -57,8 +57,8 @@ describe("S5-1: updateUserInfo helper", () => {
 });
 
 // ─── S5-2: Reset de Senha ─────────────────────────────────────────────────────
-describe("S5-2: resetUserPassword — senha padrão Security2026@", () => {
-  it("S5-2.1: deve gerar hash bcrypt válido para a senha padrão", async () => {
+describe("S5-2: resetUserPassword — senha forte com bcrypt cost 12", () => {
+  it("S5-2.1: deve gerar hash bcrypt válido para senha complexa", async () => {
     const DEFAULT_PASSWORD = "Security2026@";
     const hash = await bcrypt.hash(DEFAULT_PASSWORD, 12);
     expect(hash).toBeTruthy();

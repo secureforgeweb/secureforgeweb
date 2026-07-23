@@ -187,7 +187,7 @@ describe("S7-5: Password hashing for reset", () => {
     expect(valid).toBe(false);
   });
 
-  it("S7-5.4 — default reset password 'Security2026@' meets complexity requirements", () => {
+  it("S7-5.4 — complex reset password example meets complexity requirements", () => {
     const pwd = "Security2026@";
     expect(pwd.length).toBeGreaterThanOrEqual(8);
     expect(/[A-Z]/.test(pwd)).toBe(true);

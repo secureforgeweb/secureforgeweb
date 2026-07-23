@@ -132,8 +132,13 @@ export default function AdminUsers() {
   });
 
   const resetPasswordMutation = trpc.admin.resetUserPassword.useMutation({
-    onSuccess: () => {
-      toast.success(t("adminUsers.passwordReset"));
+    onSuccess: (data) => {
+      const temp = data.temporaryPassword;
+      toast.success(
+        temp
+          ? t("adminUsers.passwordResetTemp", { password: temp })
+          : t("adminUsers.passwordReset")
+      );
       setResetTarget(null);
     },
     onError: (e) => toast.error(e.message),

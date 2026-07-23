@@ -7,7 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../controllers/index.js";
 import { createContext } from "./context";
 import { serveStatic } from "./vite.js";
-import { applySecurityMiddleware } from "../middleware/security.js";
+import { applySecurityMiddleware, productionErrorHandler } from "../middleware/security.js";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -80,6 +80,8 @@ async function startServer() {
       res.redirect(302, `${frontendUrl}/login`);
     });
   }
+
+  app.use(productionErrorHandler);
 
   const preferredPort = parseInt(process.env.PORT || "3000", 10);
   let port = preferredPort;

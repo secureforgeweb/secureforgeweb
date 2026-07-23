@@ -6,33 +6,46 @@
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
-import type { Application } from "express";
+import type { Application, Request, Response, NextFunction } from "express";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 // ─── 6.7 Helmet ───────────────────────────────────────────────────────────────
 // Removes X-Powered-By, sets X-Content-Type-Options: nosniff,
-// and enables Strict-Transport-Security (HSTS).
+// HSTS + CSP in production (localhost/dev keeps HTTP + Vite HMR working).
 export const helmetMiddleware = helmet({
-  // Remove X-Powered-By header (hides Express fingerprint)
   hidePoweredBy: true,
-  // X-Content-Type-Options: nosniff (prevents MIME sniffing)
   noSniff: true,
-  // Strict-Transport-Security: max-age=31536000 (1 year), includeSubDomains
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  },
-  // Content-Security-Policy: allow same-origin and trusted CDNs
-  contentSecurityPolicy: false, // Disabled to avoid blocking the SPA in dev
-  // X-Frame-Options: SAMEORIGIN (clickjacking protection)
+  hsts: isProduction
+    ? {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
+    : false,
+  contentSecurityPolicy: isProduction
+    ? {
+        useDefaults: true,
+        directives: {
+          "default-src": ["'self'"],
+          "base-uri": ["'self'"],
+          "object-src": ["'none'"],
+          "frame-ancestors": ["'self'"],
+          "form-action": ["'self'"],
+          "img-src": ["'self'", "data:", "blob:", "https:"],
+          "font-src": ["'self'", "data:", "https:"],
+          "style-src": ["'self'", "'unsafe-inline'"],
+          "script-src": ["'self'"],
+          "connect-src": ["'self'", "https:"],
+          "upgrade-insecure-requests": null,
+        },
+      }
+    : false,
   frameguard: { action: "sameorigin" },
-  // X-XSS-Protection: 0 (modern browsers use CSP instead)
   xssFilter: false,
 });
 
 // ─── 6.6 CORS ─────────────────────────────────────────────────────────────────
-const isProduction = process.env.NODE_ENV === "production";
-
 const configuredOrigins = [
   process.env.FRONTEND_URL ?? "http://localhost:5173",
   "http://localhost:5173",
@@ -75,7 +88,7 @@ export const corsMiddleware = cors({
   },
   credentials: true, // Allow cookies (session cookie)
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-locale"],
 });
 
 // ─── 6.5 Rate Limiting ────────────────────────────────────────────────────────
@@ -125,11 +138,61 @@ export const authRateLimit = rateLimit({
   },
 });
 
+function isLocalHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.endsWith(".localhost")
+  );
+}
+
+/**
+ * Optional HTTPS redirect when FORCE_HTTPS=1.
+ * Never redirects localhost / 127.0.0.1 so local HTTP keeps working.
+ */
+export function httpsRedirectMiddleware(req: Request, res: Response, next: NextFunction): void {
+  if (process.env.FORCE_HTTPS !== "1") return next();
+  if (isLocalHost(req.hostname)) return next();
+  const forwarded = req.headers["x-forwarded-proto"];
+  const proto = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0];
+  if (req.secure || proto?.trim().toLowerCase() === "https") return next();
+  return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+}
+
+/** Strip stack traces from unexpected Express errors in production. */
+export function productionErrorHandler(
+  err: unknown,
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  if (res.headersSent) return next(err);
+  const status =
+    typeof err === "object" && err && "status" in err && typeof (err as { status: unknown }).status === "number"
+      ? (err as { status: number }).status
+      : 500;
+  if (isProduction) {
+    console.error("[API] Unhandled error:", err instanceof Error ? err.message : err);
+    res.status(status >= 400 && status < 600 ? status : 500).json({
+      error: "Erro interno do servidor.",
+    });
+    return;
+  }
+  next(err);
+}
+
 /**
  * Apply all security middleware to the Express app.
  * Call this before registering any routes.
  */
 export function applySecurityMiddleware(app: Application): void {
+  if (process.env.TRUST_PROXY === "1" || (isProduction && process.env.TRUST_PROXY !== "0")) {
+    app.set("trust proxy", 1);
+  }
+
+  app.use(httpsRedirectMiddleware);
+
   // 6.7 — Helmet (security headers)
   app.use(helmetMiddleware);
 

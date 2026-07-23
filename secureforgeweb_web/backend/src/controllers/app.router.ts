@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, SESSION_TTL_MS } from "@shared/const";
 import { apiError } from "../../shared/apiErrors.js";
 import { getSessionCookieOptions } from "../_core/cookies.js";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc.js";
@@ -175,9 +175,12 @@ const authRouter = router({
         throwApiError("UNAUTHORIZED", ctx.locale, "auth.invalidCredentials");
       }
       await upsertUser({ openId: user.openId, lastSignedIn: new Date() });
-      const token = await sdk.createSessionToken(user.openId, { name: user.name ?? "" });
+      const token = await sdk.createSessionToken(user.openId, {
+        name: user.name ?? "",
+        expiresInMs: SESSION_TTL_MS,
+      });
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+      ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: SESSION_TTL_MS });
       return { success: true, mustChangePassword: user.mustChangePassword ?? false };
     }),
 
@@ -203,12 +206,17 @@ const authRouter = router({
         expiresMinutes: 10,
       });
       if (emailResult.linkInBand) {
-        return {
-          success: true,
-          linkInBand: true,
-          resetUrl,
-          deliveryNote: emailResult.deliveryNote,
-        };
+        // Only expose reset URL in-band when explicitly enabled (local/dev without SMTP).
+        const allowInBand = process.env.LINK_IN_BAND_RESET === "1" || process.env.NODE_ENV !== "production";
+        if (allowInBand) {
+          return {
+            success: true,
+            linkInBand: true,
+            resetUrl,
+            deliveryNote: emailResult.deliveryNote,
+          };
+        }
+        console.warn("[Auth] Password reset email unavailable; LINK_IN_BAND_RESET not enabled in production.");
       }
       return { success: true, linkInBand: false };
     }),
@@ -321,9 +329,11 @@ const adminRouter = router({
       if (input.userId === ctx.user.id) {
         throwApiError("BAD_REQUEST", ctx.locale, "admin.useProfileToChangePassword");
       }
-      const hash = await bcrypt.hash("Security2026@", 12);
+      // Temporary password: random + fixed complexity markers (upper/lower/digit/special).
+      const temporaryPassword = `Tmp!${crypto.randomBytes(9).toString("base64url")}9a`;
+      const hash = await bcrypt.hash(temporaryPassword, 12);
       await resetUserPassword(input.userId, hash);
-      return { success: true };
+      return { success: true, temporaryPassword };
     }),
 
   listChecklistItems: adminProcedure

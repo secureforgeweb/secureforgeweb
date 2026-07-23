@@ -230,15 +230,15 @@ describe("S9-6: Procedure validateResetToken — validação de token", () => {
   });
 
   it("S9-6.2: retorna valid: false para token inválido", () => {
-    expect(routersSource).toContain('return { valid: false, reason: "Token inválido" }');
+    expect(routersSource).toContain('auth.tokenInvalid');
   });
 
   it("S9-6.3: retorna valid: false para token já utilizado", () => {
-    expect(routersSource).toContain('return { valid: false, reason: "Token já utilizado" }');
+    expect(routersSource).toContain('auth.tokenUsed');
   });
 
   it("S9-6.4: retorna valid: false para token expirado", () => {
-    expect(routersSource).toContain('return { valid: false, reason: "Token expirado" }');
+    expect(routersSource).toContain('auth.tokenExpired');
   });
 
   it("S9-6.5: verifica campo usedAt do token", () => {
@@ -266,8 +266,8 @@ describe("S9-7: Procedure confirmPasswordReset — redefinição de senha", () =
     expect(routersSource).toContain("confirmPasswordReset");
   });
 
-  it("S9-7.2: requer nova senha com mínimo 8 caracteres", () => {
-    expect(routersSource).toContain("newPassword: z.string().min(8)");
+  it("S9-7.2: valida nova senha com política isPasswordValid (mín. 8 + complexidade)", () => {
+    expect(routersSource).toContain("isPasswordValid(input.newPassword)");
   });
 
   it("S9-7.3: usa bcrypt para hash da nova senha", () => {
@@ -279,15 +279,15 @@ describe("S9-7: Procedure confirmPasswordReset — redefinição de senha", () =
   });
 
   it("S9-7.5: lança erro para token inválido", () => {
-    expect(routersSource).toContain('"Token inválido"');
+    expect(routersSource).toContain("auth.tokenInvalid");
   });
 
   it("S9-7.6: lança erro para token já utilizado", () => {
-    expect(routersSource).toContain('"Token já utilizado"');
+    expect(routersSource).toContain("auth.tokenUsed");
   });
 
   it("S9-7.7: lança erro para token expirado", () => {
-    expect(routersSource).toContain('"Token expirado. Solicite uma nova redefinição."');
+    expect(routersSource).toContain("auth.tokenExpired");
   });
 
   it("S9-7.8: chama resetPasswordWithToken para persistir a nova senha", () => {
@@ -308,8 +308,7 @@ describe("S9-8: Segurança — prevenção de enumeração de e-mail", () => {
   });
 
   it("S9-8.1: retorna success mesmo quando e-mail não existe (anti-enumeração)", () => {
-    // The procedure should return success even for non-existent emails
-    expect(routersSource).toContain("Always return success to prevent email enumeration");
+    expect(routersSource).toContain("if (!user || !user.email) return { success: true, linkInBand: false }");
   });
 
   it("S9-8.2: retorna success: true para e-mail não cadastrado", () => {
@@ -380,11 +379,11 @@ describe("S9-9: Frontend Login.tsx — exibição do link in-band", () => {
   });
 
   it("S9-9.6: tem botão para copiar o link", () => {
-    expect(loginSource).toContain("Copiar Link");
+    expect(loginSource).toContain("login.forgot.copyLink");
   });
 
   it("S9-9.7: tem botão para abrir o link diretamente", () => {
-    expect(loginSource).toContain("Abrir Link");
+    expect(loginSource).toContain("login.forgot.openLink");
   });
 
   it("S9-9.8: usa navigator.clipboard.writeText para copiar", () => {
