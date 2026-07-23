@@ -1,7 +1,11 @@
 import "./loadEnv.js";
 import express from "express";
-import { createServer } from "http";
+import fs from "node:fs";
+import path from "node:path";
+import { createServer as createHttpServer } from "http";
+import { createServer as createHttpsServer } from "https";
 import net from "net";
+import { fileURLToPath } from "node:url";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../controllers/index.js";
@@ -28,9 +32,38 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+function resolveTlsPath(value: string | undefined): string | undefined {
+  if (!value?.trim()) return undefined;
+  const raw = value.trim();
+  if (path.isAbsolute(raw) && fs.existsSync(raw)) return raw;
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(process.cwd(), raw),
+    path.resolve(process.cwd(), "secureforgeweb_web", raw),
+    path.resolve(here, "../../../", raw),
+  ];
+  return candidates.find((p) => fs.existsSync(p));
+}
+
+function createAppServer(app: express.Express) {
+  const certPath = resolveTlsPath(process.env.HTTPS_CERT);
+  const keyPath = resolveTlsPath(process.env.HTTPS_KEY);
+  if (certPath && keyPath) {
+    const server = createHttpsServer(
+      {
+        cert: fs.readFileSync(certPath),
+        key: fs.readFileSync(keyPath),
+      },
+      app
+    );
+    return { server, protocol: "https" as const };
+  }
+  return { server: createHttpServer(app), protocol: "http" as const };
+}
+
 async function startServer() {
   const app = express();
-  const server = createServer(app);
+  const { server, protocol } = createAppServer(app);
 
   applySecurityMiddleware(app);
 
@@ -106,8 +139,11 @@ async function startServer() {
   }
 
   server.listen(port, () => {
-    const apiBase = `http://localhost:${port}`;
+    const apiBase = `${protocol}://localhost:${port}`;
     console.log(`[SecureForge Web] API: ${apiBase} (rotas em /api/trpc)`);
+    if (protocol === "https") {
+      console.log(`[SecureForge Web] TLS local ativo (mkcert). Para checklist de headers, cadastre: ${apiBase}`);
+    }
     if (process.env.NODE_ENV === "development") {
       console.log(`[SecureForge Web] Frontend: ${process.env.FRONTEND_URL ?? "http://localhost:5173"}`);
     }

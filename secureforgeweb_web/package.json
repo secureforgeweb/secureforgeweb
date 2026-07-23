@@ -12,6 +12,7 @@
     "dev": "concurrently -n api,web -c blue,green \"pnpm dev:backend\" \"pnpm dev:frontend\"",
     "dev:backend": "cross-env NODE_ENV=development tsx watch --tsconfig backend/config/tsconfig.json backend/src/_core/index.ts",
     "dev:frontend": "vite --config frontend/config/vite.config.ts",
+    "https:setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-local-https.ps1",
     "build": "pnpm build:frontend && pnpm build:backend",
     "build:frontend": "vite build --config frontend/config/vite.config.ts",
     "build:backend": "esbuild backend/src/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --alias:@shared/const=./backend/shared/const.ts --alias:@shared/types=./backend/shared/types.ts --alias:@shared/_core/errors=./backend/shared/_core/errors.ts",

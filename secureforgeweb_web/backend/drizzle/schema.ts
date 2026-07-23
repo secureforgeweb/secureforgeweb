@@ -144,7 +144,7 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
-// ─── PosturaWeb: Applications & Checklist ───────────────────────────────────
+// ─── SecureForge Web: Applications & Checklist ───────────────────────────────
 export const severityEnum = pgEnum("severity", ["critical", "high", "medium", "low"]);
 
 export const checklistProfileEnum = pgEnum("checklist_profile", [
@@ -254,7 +254,7 @@ export const defaultRecommendations = pgTable("default_recommendations", {
 export type DefaultRecommendation = typeof defaultRecommendations.$inferSelect;
 export type InsertDefaultRecommendation = typeof defaultRecommendations.$inferInsert;
 
-// ─── PosturaWeb: Analyses & Checklist Responses (Fase 2) ────────────────────
+// ─── SecureForge Web: Analyses & Checklist Responses (Fase 2) ────────────────
 export const complianceEnum = pgEnum("compliance", [
   "conforme",
   "parcial",
@@ -301,7 +301,7 @@ export const checklistResponses = pgTable("checklist_responses", {
 export type ChecklistResponse = typeof checklistResponses.$inferSelect;
 export type InsertChecklistResponse = typeof checklistResponses.$inferInsert;
 
-// ─── PosturaWeb: Findings (Fase 3) ───────────────────────────────────────────
+// ─── SecureForge Web: Findings (Fase 3) ───────────────────────────────────────
 export const findingStatusEnum = pgEnum("finding_status", [
   "aberto",
   "em_correcao",

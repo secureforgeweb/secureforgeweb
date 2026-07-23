@@ -1064,7 +1064,7 @@ const reportsRouter = router({
       return {
         base64: buffer.toString("base64"),
         mimeType: "application/pdf" as const,
-        filename: `postura-${slug}-${date}.pdf`,
+        filename: `secureforgeweb-${slug}-${date}.pdf`,
         findingCount: findings.length,
         postureScore: dashboard.postureScore,
       };

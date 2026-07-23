@@ -416,7 +416,7 @@ pnpm dev
 2. Ambos executam análise completa no wizard.  
 3. Admin em **Análises globais** seleciona execuções e **Compara** postura no gráfico.
 
-### 9.4 Testes automatizados (domínio PosturaWeb)
+### 9.4 Testes automatizados (domínio SecureForge Web)
 
 | Suite | Testes |
 |---|---|

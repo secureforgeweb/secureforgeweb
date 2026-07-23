@@ -96,7 +96,7 @@ describe("reports.exportPdf", () => {
     const result = await caller.reports.exportPdf({ applicationId: 1 });
     expect(result.mimeType).toBe("application/pdf");
     expect(result.base64).toBeDefined();
-    expect(result.filename).toContain("postura-portal-web");
+    expect(result.filename).toContain("secureforgeweb-portal-web");
     expect(result.findingCount).toBe(1);
     expect(result.postureScore).toBe(75);
     expect(generatePosturePdfBuffer).toHaveBeenCalledWith(

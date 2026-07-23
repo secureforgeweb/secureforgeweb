@@ -9,21 +9,23 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import type { Application, Request, Response, NextFunction } from "express";
 
 const isProduction = process.env.NODE_ENV === "production";
+/** Demo/local HTTPS: set ENABLE_SECURE_HEADERS=1 to turn on CSP+HSTS without full production mode. */
+const enableSecureHeaders = isProduction || process.env.ENABLE_SECURE_HEADERS === "1";
 
 // ─── 6.7 Helmet ───────────────────────────────────────────────────────────────
 // Removes X-Powered-By, sets X-Content-Type-Options: nosniff,
-// HSTS + CSP in production (localhost/dev keeps HTTP + Vite HMR working).
+// HSTS + CSP in production (or ENABLE_SECURE_HEADERS=1 for local HTTPS demos).
 export const helmetMiddleware = helmet({
   hidePoweredBy: true,
   noSniff: true,
-  hsts: isProduction
+  hsts: enableSecureHeaders
     ? {
         maxAge: 31536000,
         includeSubDomains: true,
         preload: true,
       }
     : false,
-  contentSecurityPolicy: isProduction
+  contentSecurityPolicy: enableSecureHeaders
     ? {
         useDefaults: true,
         directives: {
@@ -35,8 +37,11 @@ export const helmetMiddleware = helmet({
           "img-src": ["'self'", "data:", "blob:", "https:"],
           "font-src": ["'self'", "data:", "https:"],
           "style-src": ["'self'", "'unsafe-inline'"],
-          "script-src": ["'self'"],
-          "connect-src": ["'self'", "https:"],
+          // Vite HMR needs unsafe-inline/eval only in pure HTTP dev; for HTTPS demo prefer built assets.
+          "script-src": enableSecureHeaders && !isProduction
+            ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
+            : ["'self'"],
+          "connect-src": ["'self'", "https:", "wss:", "ws:"],
           "upgrade-insecure-requests": null,
         },
       }
@@ -52,6 +57,12 @@ const configuredOrigins = [
   "http://localhost:5174",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
+  "https://localhost:5173",
+  "https://localhost:5174",
+  "https://127.0.0.1:5173",
+  "https://127.0.0.1:5174",
+  "https://localhost:3000",
+  "http://localhost:3000",
   ...(process.env.ADDITIONAL_ORIGINS
     ? process.env.ADDITIONAL_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
     : []),
@@ -59,10 +70,11 @@ const configuredOrigins = [
 
 const DEV_VITE_PORTS = new Set(["5173", "5174", "4173"]);
 
-/** Em dev, aceita Vite em localhost ou IP da rede (ex.: http://10.x.x.x:5174). */
+/** Em dev, aceita Vite em localhost ou IP da rede (ex.: http://10.x.x.x:5174 ou https). */
 function isDevFrontendOrigin(origin: string): boolean {
   try {
     const url = new URL(origin);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
     if (!DEV_VITE_PORTS.has(url.port)) return false;
     const host = url.hostname;
     if (host === "localhost" || host === "127.0.0.1") return true;

@@ -3,6 +3,10 @@ _ref/
 **/node_modules
 .pnpm-store/
 
+# Local TLS certificates (mkcert) — keep folder, ignore private keys/certs
+secureforgeweb_web/certs/*.pem
+*.pem
+
 # Build outputs
 dist/
 build/

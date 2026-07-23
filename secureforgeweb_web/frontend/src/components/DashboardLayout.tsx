@@ -191,7 +191,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Tooltip>
             <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground min-w-0 truncate">
               <Shield className="w-3.5 h-3.5 text-primary shrink-0" />
-              <span className="text-muted-foreground/50 shrink-0">PWEB</span>
+              <span className="text-muted-foreground/50 shrink-0">SecureForge</span>
               <ChevronRight className="w-3 h-3 text-muted-foreground/30 shrink-0" />
               <span className="text-foreground font-medium truncate">
                 {activeItem ? t(activeItem.labelKey) : t("nav.dashboard")}
