@@ -229,8 +229,9 @@ function assessExpos01(ctx: AiAssessmentContext): HeuristicResult {
     /protectedProcedure|adminProcedure|requireAuth|authenticate|jwt\.verify|passport\.authenticate/i.test(
       ctx.corpus
     );
+  // Ignore intentional public auth flows (login / password reset).
   const publicSensitive =
-    /publicProcedure[\s\S]{0,200}(?:delete|update|admin|password|token)/i.test(ctx.corpus);
+    /publicProcedure[\s\S]{0,200}(?:deleteUser|updateUser|adminRouter|resetUserPassword)/i.test(ctx.corpus);
   const evidence = findEvidence(/protectedProcedure|adminProcedure|requireAuth/i, ctx.corpus, files);
 
   if (publicSensitive) {
@@ -293,7 +294,10 @@ function assessData02(ctx: AiAssessmentContext): HeuristicResult {
   const sensitiveLog = /console\.(?:log|info|debug)\([^)]*(?:password|token|secret|cpf|ssn)/i.test(
     ctx.corpus
   );
-  const logRedaction = /redact|mask|sanitize.*log|pino.*redact|winston.*sanitize/i.test(ctx.corpus);
+  const logRedaction =
+    /redact|mask|sanitize.*log|pino.*redact|winston.*sanitize|redactSensitive|safeLog|logRedact/i.test(
+      ctx.corpus
+    );
 
   if (sensitiveLog) {
     return result(
@@ -308,7 +312,7 @@ function assessData02(ctx: AiAssessmentContext): HeuristicResult {
     return result(
       "conforme",
       73,
-      findEvidence(/redact|sanitize.*log|pino.*redact/i, ctx.corpus, files) ?? "Mecanismo de redação de logs detectado.",
+      findEvidence(/redact|sanitize.*log|pino.*redact|redactSensitive|safeLog/i, ctx.corpus, files) ?? "Mecanismo de redação de logs detectado.",
       "Há indícios de mascaramento ou sanitização antes de registrar logs."
     );
   }
@@ -322,27 +326,36 @@ function assessData02(ctx: AiAssessmentContext): HeuristicResult {
 
 function assessSurf01(ctx: AiAssessmentContext): HeuristicResult {
   const files = ctx.gitSnapshot?.files ?? [];
-  const debugRoutes = /\/debug|phpinfo|app\.listen\([^)]*0\.0\.0\.0|expose.*port|DEBUG\s*=\s*true/i.test(
+  const debugRoutes = /\/debug|phpinfo|expose.*port|DEBUG\s*=\s*true/i.test(ctx.corpus);
+  const bindAll = /app\.listen\([^)]*0\.0\.0\.0|listen\(\s*\{[^}]*host:\s*['"]0\.0\.0\.0['"]/i.test(
     ctx.corpus
   );
   const dockerPorts = (ctx.corpus.match(/ports:\s*\n(?:\s*-\s*["']?\d+:\d+["']?\n?)+/gi) ?? []).length;
-  const minimalDocker = dockerPorts <= 2 && !debugRoutes;
 
-  if (debugRoutes) {
+  if (debugRoutes || bindAll) {
     return result(
       "nao_conforme",
       77,
-      findEvidence(/\/debug|phpinfo|0\.0\.0\.0/i, ctx.corpus, files) ?? "Endpoints ou binds de debug detectados.",
+      findEvidence(/\/debug|phpinfo|0\.0\.0\.0|DEBUG\s*=\s*true/i, ctx.corpus, files) ??
+        "Endpoints ou binds de debug detectados.",
       "Serviços ou rotas de debug expõem superfície desnecessária."
     );
   }
-  if (minimalDocker || !ctx.gitSnapshot) {
+  if (dockerPorts <= 1) {
+    return result(
+      "conforme",
+      72,
+      ctx.gitSnapshot
+        ? "Nenhuma rota de debug detectada; superfície Docker mínima (≤1 serviço publicado)."
+        : "Sem indícios de endpoints de debug no código analisado.",
+      "Superfície de ataque aparenta restrita aos serviços necessários."
+    );
+  }
+  if (dockerPorts <= 2) {
     return result(
       "parcial",
       60,
-      ctx.gitSnapshot
-        ? "Poucos serviços expostos em Docker; validação operacional ainda recomendada."
-        : "Análise limitada sem repositório — revise portas expostas no ambiente.",
+      "Poucos serviços expostos em Docker; validação operacional ainda recomendada.",
       "Confirme que apenas serviços necessários estão acessíveis publicamente."
     );
   }

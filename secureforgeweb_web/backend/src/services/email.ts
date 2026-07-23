@@ -11,6 +11,7 @@
  * as a secondary fallback via Nodemailer.
  */
 import nodemailer from "nodemailer";
+import { safeLog } from "../lib/logRedact.js";
 
 interface SendResetEmailOptions {
   to: string;
@@ -216,14 +217,14 @@ export async function sendPasswordResetEmail(
   const resendResult = await trySendViaResend(to, subject, html, text);
 
   if (resendResult.ok) {
-    console.log(`[Email] ✅ Enviado via Resend para: ${to}`);
+    safeLog("log", "[Email] ✅ Enviado via Resend para:", to);
     return { sent: true };
   }
 
   // Free-tier restriction: can only send to the account owner's email
   if (resendResult.restrictedDomain) {
-    console.warn(`[Email] ⚠ Resend: domínio não verificado. Link retornado in-band para: ${to}`);
-    console.log(`[Email] Reset URL: ${resetUrl}`);
+    safeLog("warn", "[Email] ⚠ Resend: domínio não verificado. Link in-band para:", to);
+    safeLog("log", "[Email] Reset URL:", resetUrl);
     return {
       sent: true,
       preview: resetUrl,
@@ -234,23 +235,23 @@ export async function sendPasswordResetEmail(
     };
   }
 
-  console.warn(`[Email] Resend falhou: ${resendResult.error}. Tentando SMTP...`);
+  safeLog("warn", "[Email] Resend falhou:", resendResult.error, "Tentando SMTP...");
 
   // ── 2. Try SMTP fallback ────────────────────────────────────────────────────
   const smtpResult = await trySendViaSmtp(to, subject, html, text);
 
   if (smtpResult.ok) {
-    console.log(`[Email] ✅ Enviado via SMTP para: ${to}`);
+    safeLog("log", "[Email] ✅ Enviado via SMTP para:", to);
     return { sent: true, preview: smtpResult.preview };
   }
 
-  console.warn(`[Email] SMTP falhou: ${smtpResult.error}. Usando fallback in-band.`);
+  safeLog("warn", "[Email] SMTP falhou:", smtpResult.error, "Usando fallback in-band.");
 
   // ── 3. Final fallback: log + return link in-band ────────────────────────────
   console.log("\n========== PASSWORD RESET EMAIL (FALLBACK MODE) ==========");
-  console.log(`To: ${to}`);
-  console.log(`Subject: ${subject}`);
-  console.log(`Reset URL: ${resetUrl}`);
+  safeLog("log", "To:", to);
+  safeLog("log", "Subject:", subject);
+  safeLog("log", "Reset URL:", resetUrl);
   console.log(`Expires in: ${expiresMinutes} minutes`);
   console.log("==========================================================\n");
 

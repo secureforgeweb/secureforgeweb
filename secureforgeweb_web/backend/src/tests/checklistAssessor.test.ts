@@ -130,4 +130,36 @@ describe("checklistAssessor — fetchHttpSecuritySnapshot", () => {
       true
     );
   });
+
+  it("quando URL é Vite (:5173), mescla headers de segurança da API (:3000)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes(":3000")) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: {
+              "content-security-policy": "default-src 'self'",
+              "strict-transport-security": "max-age=31536000",
+              "x-frame-options": "SAMEORIGIN",
+              "x-content-type-options": "nosniff",
+            },
+          });
+        }
+        return new Response("<html>vite</html>", {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
+      })
+    );
+
+    const snapshot = await fetchHttpSecuritySnapshot("https://localhost:5173");
+    expect(snapshot.headers["content-security-policy"]).toBe("default-src 'self'");
+    expect(snapshot.headers["strict-transport-security"]).toContain("max-age");
+    expect(snapshot.headers["x-content-type-options"]).toBe("nosniff");
+    const assessed = assessHttpSecurityItems(snapshot, mockItems);
+    expect(assessed.find((s) => s.itemCode === "HEADER-01")?.compliance).toBe("conforme");
+    expect(assessed.find((s) => s.itemCode === "DATA-01")?.compliance).toBe("conforme");
+  });
 });

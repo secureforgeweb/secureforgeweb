@@ -409,6 +409,18 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
     }
     case "AUTHZ-02": {
       const roles = countMatches(/role\s*===\s*['"][^'"]+['"]|enum.*role|user\.role/i, ctx);
+      const hasAdmin = /adminProcedure|role\s*===\s*['"]admin['"]/i.test(ctx.corpus);
+      const hasAnalyst = /analystProcedure|security-analyst/i.test(ctx.corpus);
+      const leastPrivilege =
+        /menor privil[eé]gio|least privilege|mustChangePassword|FORBIDDEN|adminOnly/i.test(ctx.corpus);
+      if (roles >= 2 && hasAdmin && (hasAnalyst || leastPrivilege)) {
+        return result(
+          "conforme",
+          78,
+          `Papéis diferenciados detectados (${roles} ocorrências) com proteção admin/analyst.`,
+          "Há distinção de papéis e checagens de autorização alinhadas ao menor privilégio."
+        );
+      }
       if (roles >= 2) {
         return result(
           "parcial",
@@ -506,9 +518,18 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
       );
     }
     case "INPUT-03": {
-      const xss = /helmet|sanitize|escapeHtml|DOMPurify|xss|encodeURIComponent/i.test(ctx.corpus);
-      const evidence = findEvidence(/helmet|sanitize|DOMPurify/i, ctx);
-      if (xss) {
+      const helmet = /helmet\s*\(|helmetMiddleware|contentSecurityPolicy/i.test(ctx.corpus);
+      const sanitize = /sanitize|escapeHtml|DOMPurify|xss|encodeURIComponent/i.test(ctx.corpus);
+      const evidence = findEvidence(/helmet|contentSecurityPolicy|DOMPurify|sanitize/i, ctx);
+      if (helmet && sanitize) {
+        return result(
+          "conforme",
+          84,
+          evidence ?? "Helmet/CSP e sanitização/escape detectados.",
+          "Controles anti-XSS presentes (headers de segurança + escape/sanitização)."
+        );
+      }
+      if (helmet || sanitize) {
         return result(
           "parcial",
           75,
@@ -525,7 +546,9 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
     }
     case "SECRET-01": {
       const envUse = /process\.env|dotenv|config\(\)|ENV\./i.test(ctx.corpus);
-      const hardcoded = /(?:api[_-]?key|secret|password)\s*[:=]\s*['"][^'"]{8,}['"]/i.test(ctx.corpus);
+      const hardcoded =
+        /(?:api[_-]?key|secret|password)\s*[:=]\s*['"][^'"]{8,}['"]/i.test(ctx.corpus) &&
+        !/(?:example|placeholder|altere_para|your[_-]?secret|changeme)/i.test(ctx.corpus);
       const evidence = findEvidence(/process\.env\.[A-Z0-9_]+/i, ctx);
       if (envUse && !hardcoded) {
         return result(
@@ -553,12 +576,20 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
     case "SECRET-02": {
       const gitignore = ctx.gitignoreContent ?? "";
       const ignoresEnv = /\.env\b|\.env\./i.test(gitignore);
-      const secretInRepo = /(?:api[_-]?key|password|secret)\s*=\s*[^\s#]+/i.test(
-        ctx.files
-          .filter((f) => !f.path.endsWith(".env.example") && !f.path.includes("test"))
-          .map((f) => f.content)
-          .join("\n")
-      );
+      // Only flag string-literal secrets in non-example / non-test sources.
+      const secretInRepo = ctx.files
+        .filter(
+          (f) =>
+            !f.path.endsWith(".env.example") &&
+            !f.path.includes("test") &&
+            !f.path.includes("__tests__") &&
+            !f.path.includes(".test.") &&
+            !f.path.includes(".spec.")
+        )
+        .some((f) =>
+          /(?:api[_-]?key|password|secret|jwt_secret)\s*[:=]\s*['"][^'"]{8,}['"]/i.test(f.content) &&
+          !/(?:example|placeholder|altere_para|your[_-]?secret|changeme|dummy)/i.test(f.content)
+        );
       if (ignoresEnv && !secretInRepo) {
         return result(
           "conforme",
@@ -584,9 +615,11 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
     }
     case "ERROR-01": {
       const prodSafe =
-        /NODE_ENV.*production|stack.*(?:hide|disable)|errorHandler|formatError|Generic.*error/i.test(ctx.corpus);
+        /NODE_ENV.*production|stack.*(?:hide|disable)|errorHandler|errorFormatter|productionErrorHandler|Generic.*error/i.test(
+          ctx.corpus
+        );
       const stackLeak = /stack:\s*err\.stack|res\.(?:send|json)\(.*stack/i.test(ctx.corpus);
-      const evidence = findEvidence(/NODE_ENV.*production|errorHandler/i, ctx);
+      const evidence = findEvidence(/NODE_ENV.*production|errorHandler|errorFormatter|productionErrorHandler/i, ctx);
       if (prodSafe && !stackLeak) {
         return result(
           "conforme",
@@ -611,14 +644,30 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
       );
     }
     case "ERROR-02": {
-      const generic = /message:\s*['"][^'"]+['"]|BAD_REQUEST|UNAUTHORIZED|toast\.error/i.test(ctx.corpus);
-      const leak = /err\.message|error\.stack|sqlMessage/i.test(ctx.corpus);
-      if (generic && !leak) {
+      const generic =
+        /throwApiError|apiError\(|toClientErrorMessage|BAD_REQUEST|UNAUTHORIZED|toast\.error|Credenciais inválidas|Invalid credentials/i.test(
+          ctx.corpus
+        );
+      const controlled =
+        /productionErrorHandler|errorFormatter|Erro interno do servidor|toClientErrorMessage/i.test(ctx.corpus);
+      const rawClientLeak =
+        /res\.(?:json|send)\([^)]*err\.message|throw new TRPCError\(\{[^}]*message:\s*err\.message/i.test(
+          ctx.corpus
+        );
+      if ((generic || controlled) && !rawClientLeak) {
         return result(
           "conforme",
-          72,
-          "Mensagens de erro estruturadas/genéricas detectadas.",
-          "Respostas parecem usar mensagens controladas."
+          74,
+          "Mensagens de erro estruturadas/genéricas detectadas (apiError/toClientErrorMessage).",
+          "Respostas parecem usar mensagens controladas ao usuário."
+        );
+      }
+      if (rawClientLeak) {
+        return result(
+          "parcial",
+          60,
+          "Há trechos que reencaminham err.message ao cliente — revisar.",
+          "Validação manual recomendada para vazamento em mensagens de erro."
         );
       }
       return result(

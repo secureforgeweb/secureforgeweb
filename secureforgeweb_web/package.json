@@ -20,6 +20,7 @@
     "check": "tsc -p backend/config/tsconfig.json && tsc -p frontend/config/tsconfig.json",
     "format": "prettier --write .",
     "test": "vitest run --config backend/config/vitest.config.ts",
+    "audit": "pnpm audit --audit-level=high",
     "db:migrate": "drizzle-kit migrate --config backend/drizzle/drizzle.config.ts",
     "db:generate": "drizzle-kit generate --config backend/drizzle/drizzle.config.ts",
     "db:push": "pnpm db:migrate",

@@ -64,6 +64,42 @@ export function normalizeAssessmentUrl(raw: string): string {
 
 export async function fetchHttpSecuritySnapshot(baseUrl: string): Promise<HttpSecuritySnapshot> {
   const requestedUrl = normalizeAssessmentUrl(baseUrl);
+  const primary = await fetchOnce(requestedUrl);
+
+  // When the app UI is on Vite (:5173), security headers live on the API (:3000).
+  // Probe /api/health on the sibling API port and merge header evidence for HEADER-*.
+  const mergedHeaders = { ...primary.headers };
+  try {
+    const u = new URL(primary.finalUrl || requestedUrl);
+    const isVitePort = u.port === "5173" || u.port === "5174" || u.port === "4173";
+    if (isVitePort) {
+      const apiUrl = new URL(u.toString());
+      apiUrl.port = process.env.PORT?.trim() || "3000";
+      apiUrl.pathname = "/api/health";
+      apiUrl.search = "";
+      apiUrl.hash = "";
+      const apiSnap = await fetchOnce(apiUrl.toString());
+      for (const [k, v] of Object.entries(apiSnap.headers)) {
+        if (!mergedHeaders[k]?.trim() && v?.trim()) mergedHeaders[k] = v;
+      }
+      // Prefer API security headers when present (CSP/HSTS/etc.).
+      for (const name of [
+        "content-security-policy",
+        "strict-transport-security",
+        "x-frame-options",
+        "x-content-type-options",
+      ]) {
+        if (apiSnap.headers[name]?.trim()) mergedHeaders[name] = apiSnap.headers[name];
+      }
+    }
+  } catch {
+    // Keep primary snapshot if API probe fails.
+  }
+
+  return { ...primary, headers: mergedHeaders };
+}
+
+async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 

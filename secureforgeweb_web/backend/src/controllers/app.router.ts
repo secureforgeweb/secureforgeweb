@@ -50,7 +50,7 @@ import {
   validateJoi,
   isPasswordValid,
 } from "../lib/validation.js";
-import { throwApiError } from "../lib/trpcErrors.js";
+import { throwApiError, toClientErrorMessage } from "../lib/trpcErrors.js";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { sdk } from "../_core/sdk.js";
@@ -405,10 +405,11 @@ const aiAssistantRouter = router({
           locale: ctx.locale,
         });
       } catch (err) {
-        if (err instanceof Error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
-        }
-        throw err;
+        if (err instanceof TRPCError) throw err;
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: toClientErrorMessage(err, ctx.locale, "error.badRequest"),
+        });
       }
     }),
 
@@ -429,10 +430,11 @@ const aiAssistantRouter = router({
           ...input,
         });
       } catch (err) {
-        if (err instanceof Error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
-        }
-        throw err;
+        if (err instanceof TRPCError) throw err;
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: toClientErrorMessage(err, ctx.locale, "error.badRequest"),
+        });
       }
     }),
 });
@@ -483,10 +485,11 @@ const applicationsRouter = router({
           techStack: validated.techStack || null,
         });
       } catch (err) {
-        if (err instanceof Error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
-        }
-        throw err;
+        if (err instanceof TRPCError) throw err;
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: toClientErrorMessage(err, ctx.locale, "error.badRequest"),
+        });
       }
     }),
 
@@ -783,7 +786,7 @@ const analysesRouter = router({
         if (err instanceof TRPCError) throw err;
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : apiError("assessment.autoFailed", ctx.locale),
+          message: toClientErrorMessage(err, ctx.locale, "assessment.autoFailed"),
         });
       }
     }),
@@ -910,10 +913,10 @@ const findingsRouter = router({
         );
       } catch (err) {
         if (err instanceof TRPCError) throw err;
-        if (err instanceof Error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: err.message });
-        }
-        throw err;
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: toClientErrorMessage(err, ctx.locale, "error.badRequest"),
+        });
       }
     }),
 

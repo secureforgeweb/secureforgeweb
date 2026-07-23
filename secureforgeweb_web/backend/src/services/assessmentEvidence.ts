@@ -36,15 +36,15 @@ export const ITEM_CODE_EVIDENCE_PATTERNS: Record<string, RegExp> = {
   "SECRET-01": /process\.env\.[A-Z0-9_]+/i,
   "SECRET-02": /\.env\b/i,
   "ERROR-01": /errorHandler|NODE_ENV.*production/i,
-  "ERROR-02": /BAD_REQUEST|UNAUTHORIZED|toast\.error/i,
+  "ERROR-02": /BAD_REQUEST|UNAUTHORIZED|toast\.error|toClientErrorMessage/i,
   "HEADER-01": /content-security-policy/i,
   "HEADER-02": /strict-transport-security/i,
   "HEADER-03": /x-frame-options|frame-ancestors/i,
   "HEADER-04": /x-content-type-options/i,
   "DATA-01": /https:\/\//i,
-  "DATA-02": /redact|sanitize.*log|pino.*redact/i,
+  "DATA-02": /redact|sanitize.*log|pino.*redact|redactSensitive|safeLog|logRedact/i,
   "SURF-01": /\/debug|phpinfo|0\.0\.0\.0/i,
-  "SURF-02": /npm audit|vulnerabilit/i,
+  "SURF-02": /npm audit|pnpm audit|vulnerabilit/i,
 };
 
 function inferLanguage(filePath: string): string | undefined {

@@ -267,7 +267,8 @@ export const UI_MESSAGES = {
     "newApp.urlOrRepo": "URL base ou Repositório Git *",
     "newApp.urlOrRepoHint": "Preencha pelo menos um dos campos abaixo para habilitar análises automáticas.",
     "newApp.baseUrl": "URL base",
-    "newApp.baseUrlHint": "Usada na análise automática de headers HTTP.",
+    "newApp.baseUrlHint":
+      "Para headers (CSP/HSTS/Helmet), use a API HTTPS: https://localhost:3000. O front Vite (:5173) também é aceito — a análise sonda a API automaticamente.",
     "newApp.repo": "Repositório Git",
     "newApp.repoHint": "Repositório público HTTPS para análise estática de código.",
     "newApp.techStack": "Stack tecnológica",
@@ -840,7 +841,8 @@ export const UI_MESSAGES = {
     "newApp.urlOrRepo": "Base URL or Git Repository *",
     "newApp.urlOrRepoHint": "Fill in at least one field below to enable automated analyses.",
     "newApp.baseUrl": "Base URL",
-    "newApp.baseUrlHint": "Used for automated HTTP header analysis.",
+    "newApp.baseUrlHint":
+      "For headers (CSP/HSTS/Helmet), use the HTTPS API: https://localhost:3000. Vite (:5173) also works — analysis probes the API automatically.",
     "newApp.repo": "Git Repository",
     "newApp.repoHint": "Public HTTPS repository for static code analysis.",
     "newApp.techStack": "Tech stack",
