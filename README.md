@@ -6,7 +6,7 @@
 
 ## Abstract
 
-SecureForge Web supports security analysts and developers who need a **repeatable, demonstrable hardening workflow** for web applications. The application provides **multi-user accounts**, **per-user AI assistant configuration**, an **admin global view** of analyses with comparative charts, a **24-item checklist** across nine categories (seed v1.0), partial-save wizard navigation, and **Entrega 3** consolidated end-to-end flow (registration → analysis → findings → dashboard → PDF). The codebase is a **monorepo slice**: `secureforgeweb_web/` holds the pnpm package (frontend + backend; dual-port dev: API `:3000`, Vite `:5173`).
+SecureForge Web supports security analysts and developers who need a **repeatable, demonstrable hardening workflow** for web applications. The application provides **multi-user accounts**, **bilingual UI (Portuguese / English)**, **per-user AI assistant configuration**, **multiple checklist catalogs** (Essential 24-item v1.0 and **OWASP ASVS 5.0** Level 1 / Complete), an **admin global view** of analyses with comparative charts, partial-save wizard navigation, resizable admin tables, and **Entrega 3+** consolidated end-to-end flow (registration → analysis → findings → dashboard → PDF). The codebase is a **monorepo slice**: `secureforgeweb_web/` holds the pnpm package (frontend + backend; dual-port dev: API `:3000`, Vite `:5173`).
 
 ---
 
@@ -91,11 +91,14 @@ In development, **Express** serves the API on **`PORT`** (default **3000**) and 
 
 ## 3.2 Main capabilities
 
-* **Applications** — register base URL and/or Git repository; start analyses.
-* **OWASP checklist wizard** — 24 items / 9 categories; partial save; HTTP, Git, and AI-assisted evidence per item.
+* **Applications** — register base URL and/or Git repository; start analyses with checklist selection.
+* **Checklist catalogs** — **Essential SecureForge v1.0** (24 items / 9 categories) plus **OWASP ASVS 5.0** (Level 1 and Complete, ~345 items) imported from the official flat JSON; admin **Sync ASVS** to refresh.
+* **OWASP checklist wizard** — partial save; filters by ASVS level and chapter search (ASVS); HTTP, Git, and AI-assisted evidence per item.
+* **Internationalization (PT / EN)** — language toggle on public and authenticated pages; backend validation and tRPC error messages follow the `x-locale` header.
 * **Findings & dashboard** — posture metrics, charts, exportable PDF.
 * **Per-user AI assistant** — OpenAI, Gemini, Azure, or custom endpoint (`/profile/ai-assistant`); keys stored per user, not in repo `.env`.
-* **Administration** — users, checklist items, **global analyses** with comparative benchmark chart.
+* **Administration** — users, checklist items (searchable table with chapter navigation), **global analyses** with column filters, resizable columns, and comparative benchmark chart.
+* **UX** — collapsible sidebar (`Ctrl+B`), dark/light theme, resizable admin table columns (preferences saved in `localStorage`).
 * **Identity** — local email/password, JWT, RBAC, notifications.
 
 ## 3.3 Architecture
@@ -187,8 +190,15 @@ Copy **`.env.example`** to **`secureforgeweb_web/.env`**, set at least **`DATABA
 
 ```bash
 pnpm install
-pnpm db:setup
+pnpm db:setup    # migrate + seed Essential v1.0 + import ASVS 5.0
 pnpm dev
+```
+
+Optional ASVS maintenance:
+
+```bash
+pnpm db:import-asvs   # first import (L1 + Complete)
+pnpm db:sync-asvs     # refresh from OWASP source (admin UI: Sync ASVS)
 ```
 
 | Service | URL |
@@ -205,6 +215,8 @@ pnpm build
 pnpm test
 pnpm check
 pnpm db:setup
+pnpm db:import-asvs
+pnpm db:sync-asvs
 ```
 
 Run **`pnpm install`** and **`pnpm db:setup`** from **`secureforgeweb_web/`** the first time.

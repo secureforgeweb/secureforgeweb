@@ -10,6 +10,8 @@
     "test": "pnpm --dir secureforgeweb_web test",
     "check": "pnpm --dir secureforgeweb_web check",
     "db:setup": "pnpm --dir secureforgeweb_web db:setup",
-    "db:migrate": "pnpm --dir secureforgeweb_web db:migrate"
+    "db:migrate": "pnpm --dir secureforgeweb_web db:migrate",
+    "db:import-asvs": "pnpm --dir secureforgeweb_web db:import-asvs",
+    "db:sync-asvs": "pnpm --dir secureforgeweb_web db:sync-asvs"
   }
 }

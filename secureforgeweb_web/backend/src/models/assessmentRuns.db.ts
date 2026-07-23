@@ -16,21 +16,27 @@ export async function recordAssessmentRun(input: AssessmentRunInput) {
   const db = await getDb();
   if (!db) return null;
 
-  const [row] = await db
-    .insert(analysisAssessmentRuns)
-    .values({
-      analysisId: input.analysisId,
-      userId: input.userId,
-      scope: input.scope,
-      assessmentMode: input.assessmentMode ?? null,
-      provider: input.provider ?? null,
-      itemsAssessed: input.itemsAssessed ?? 0,
-      contextSummary: input.contextSummary ?? null,
-      assessedAt: new Date(),
-    })
-    .returning();
+  try {
+    const [row] = await db
+      .insert(analysisAssessmentRuns)
+      .values({
+        analysisId: input.analysisId,
+        userId: input.userId,
+        scope: input.scope,
+        assessmentMode: input.assessmentMode ?? null,
+        provider: input.provider ?? null,
+        itemsAssessed: input.itemsAssessed ?? 0,
+        contextSummary: input.contextSummary ?? null,
+        assessedAt: new Date(),
+      })
+      .returning();
 
-  return row;
+    return row;
+  } catch (err) {
+    // Auditoria/benchmark não deve derrubar a análise assistida (ex.: migração 0016 ausente).
+    console.error("[recordAssessmentRun] failed to persist assessment run:", err);
+    return null;
+  }
 }
 
 export async function getAssessmentRunsForAnalyses(analysisIds: number[]) {
