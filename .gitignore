@@ -120,5 +120,14 @@ temp/
 *.sqlite
 *.sqlite3
 
+# Docs: only manuals + screenshots stay on GitHub (rest is local-only)
+secureforgeweb_web/docs/**
+!secureforgeweb_web/docs/
+!secureforgeweb_web/docs/MANUAL.md
+!secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md
+!secureforgeweb_web/docs/README.md
+!secureforgeweb_web/docs/screenshots/
+!secureforgeweb_web/docs/screenshots/**
+
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/

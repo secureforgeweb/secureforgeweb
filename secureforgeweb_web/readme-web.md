@@ -107,9 +107,9 @@ Ficheiros em **`docs/`**:
 | Documento | Público |
 |-----------|---------|
 | [`docs/MANUAL.md`](docs/MANUAL.md) | Utilizadores — fluxo completo |
-| [`docs/RELATORIO.md`](docs/RELATORIO.md) | Relatório consolidado |
 | [`docs/PROJETO_ARQUITETURAL.md`](docs/PROJETO_ARQUITETURAL.md) | Arquitetura alvo |
-| [`docs/README.md`](docs/README.md) | Índice completo |
+| [`docs/README.md`](docs/README.md) | Índice + screenshots |
+| [`docs/screenshots/`](docs/screenshots/) | Capturas de ecrã |
 
 README internacional (inglês) na **raiz do repositório**: [`../README.md`](../README.md).
 
@@ -220,7 +220,7 @@ Protótipo funcional e evoluído:
 - IA por utilizador; admin com análises globais, gráfico comparativo e tabelas redimensionáveis
 - Admin Checklist Items: busca, filtros, navegação por capítulo, colunas ajustáveis
 
-Detalhes: [`docs/RELATORIO.md`](docs/RELATORIO.md).
+Detalhes: [`docs/PROJETO_ARQUITETURAL.md`](docs/PROJETO_ARQUITETURAL.md) e [`docs/MANUAL.md`](docs/MANUAL.md).
 
 ---
 
