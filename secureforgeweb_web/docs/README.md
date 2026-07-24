@@ -5,7 +5,7 @@
 | Artefato | Público | Conteúdo |
 |---|---|---|
 | [MANUAL.md](MANUAL.md) | Usuários / revisores | Manual de uso (fluxo completo + admin) |
-| [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Acadêmico / técnico | Arquitetura alvo e requisitos |
+| [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Técnico | Arquitetura, requisitos e stack da SecureForge Web |
 | [screenshots/arquitetura.png](screenshots/arquitetura.png) | Todos | **Diagrama oficial de arquitetura** (fluxo cadastro → avaliação → postura) |
 | [screenshots/](screenshots/) | Todos | Demais capturas de tela da interface |
 | Este `README.md` | Todos | Índice e links oficiais |

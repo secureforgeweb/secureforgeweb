@@ -1,6 +1,6 @@
 # Manual de Uso — SecureForge Web
 
-Plataforma de diagnóstico e hardening de aplicações web (AppHardener).
+Plataforma de diagnóstico e hardening de aplicações web.
 
 | Recurso | Link |
 |---|---|

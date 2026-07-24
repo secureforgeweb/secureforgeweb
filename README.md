@@ -68,7 +68,7 @@ Guia completo (variáveis, HTTPS local, sync ASVS): [`secureforgeweb_web/readme-
 * **Administração** — usuários, itens de checklist, visão global de análises com filtros e gráficos comparativos.
 * **i18n** — interface em português e inglês; mensagens da API seguem o cabeçalho `x-locale`.
 
-Contexto acadêmico: trilha integradora **AppHardener** (segurança aplicada / hardening web).
+Contexto: plataforma de **segurança aplicada** e **hardening** de aplicações web (checklist OWASP, evidências e postura).
 
 > Ao avaliar **URLs ou repositórios de terceiros**, trate os alvos como **não confiáveis**. Nunca versione segredos nem credenciais de produção.
 

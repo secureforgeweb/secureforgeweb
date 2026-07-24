@@ -1,11 +1,11 @@
-# Projeto Arquitetural — AppHardener
+# Projeto Arquitetural — SecureForge Web
 
-**Disciplina:** Projeto Integrador — Desenvolvimento de Ferramentas de Segurança Aplicada  
-**Trilha:** AppHardener  
-**Versão:** 1.3  
-**Data:** 07/07/2026
+**Produto:** SecureForge Web  
+**Repositório:** [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb)  
+**Versão do documento:** 1.4  
+**Data:** 24/07/2026
 
-> Para o **estado operacional atual**, consulte [MANUAL.md](MANUAL.md), o [índice da documentação](README.md), o [diagrama de arquitetura](screenshots/arquitetura.png) e os [vídeos de demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
+> Para o **estado operacional atual**, consulte [MANUAL.md](MANUAL.md), o [índice da documentação](README.md), o [diagrama de arquitetura](screenshots/arquitetura.png) e os [vídeos de demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link). Este documento descreve a arquitetura e os requisitos da plataforma; a implementação inclui IA por usuário, visão administrativa com benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
 
 ---
 
@@ -13,9 +13,9 @@
 
 ### 1.1 Contexto
 
-O AppHardener é uma ferramenta voltada ao **diagnóstico de segurança** e ao **fortalecimento gradual (hardening)** de aplicações web. Foi concebida para equipes pequenas, laboratórios acadêmicos e contextos em que não há um fluxo estruturado para revisar a postura de segurança de uma aplicação em funcionamento.
+A **SecureForge Web** é uma plataforma voltada ao **diagnóstico de segurança** e ao **fortalecimento gradual (hardening)** de aplicações web. Foi concebida para equipes pequenas, laboratórios, grupos de pesquisa e contextos em que não há um fluxo estruturado para revisar a postura de segurança de uma aplicação em funcionamento.
 
-Diferentemente de scanners profissionais ou suítes de pentest, o AppHardener atua como um **assistente guiado e orientado à correção**, ajudando a identificar fragilidades, registrar achados, priorizar riscos e acompanhar melhorias ao longo do tempo.
+Diferentemente de scanners profissionais ou suítes de pentest, a SecureForge Web atua como um **assistente guiado e orientado à correção**, ajudando a identificar fragilidades, registrar achados, priorizar riscos e acompanhar melhorias ao longo do tempo.
 
 ### 1.2 Problema
 
@@ -26,11 +26,11 @@ Muitas equipes possuem aplicações web em desenvolvimento ou em produção, mas
 - quais riscos são mais relevantes;
 - quais ações devem ser priorizadas.
 
-Ferramentas enterprise costumam focar em automação e escala. O AppHardener preenche a lacuna de um processo **simples, didático e acionável** para revisão e hardening.
+Ferramentas enterprise costumam focar em automação e escala. A SecureForge Web preenche a lacuna de um processo **simples, rastreável e acionável** para revisão e hardening.
 
 ### 1.3 Objetivo do sistema
 
-Desenvolver um protótipo funcional que permita:
+Disponibilizar uma plataforma funcional que permita:
 
 1. Cadastrar aplicações ou projetos web.
 2. Aplicar um checklist de análise de segurança.
@@ -54,18 +54,18 @@ Desenvolver um protótipo funcional que permita:
 ### 1.5 Público-alvo
 
 - Equipes pequenas de desenvolvimento
-- Laboratórios acadêmicos e grupos de pesquisa
+- Laboratórios e grupos de pesquisa
 - Pequenas empresas
 - Equipes AppSec iniciantes
 - Projetos que precisam revisar postura de segurança web
 
-### 1.6 Relação com as disciplinas do módulo
+### 1.6 Alinhamento a domínios de segurança
 
-| Disciplina | Contribuição no AppHardener |
+| Domínio | Contribuição na SecureForge Web |
 |---|---|
-| **Segurança de Redes** | Superfície de ataque, serviços expostos, componentes acessíveis, riscos de exposição |
-| **Segurança de Aplicações Web e Móveis** | Autenticação, autorização, XSS, exposição de dados, validação, headers |
-| **Projeto e Desenvolvimento de Código Seguro** | OWASP Top 10, validação segura, proteção de segredos, SDLC seguro, boas práticas |
+| **Rede e exposição** | Superfície de ataque, serviços expostos, componentes acessíveis, riscos de exposição |
+| **Aplicações web** | Autenticação, autorização, XSS, exposição de dados, validação, headers |
+| **Código seguro / AppSec** | Controles alinhados a OWASP (Top 10, ASVS, WSTG), proteção de segredos e boas práticas |
 
 ---
 
@@ -75,7 +75,7 @@ Desenvolver um protótipo funcional que permita:
 
 ### 2.1 Estilo arquitetural
 
-O sistema adota uma arquitetura **em camadas (layered)** com separação clara entre apresentação, aplicação, domínio e persistência. Para o protótipo acadêmico, recomenda-se uma **aplicação web monolítica modular**, evitando complexidade desnecessária de microsserviços.
+O sistema adota uma arquitetura **em camadas (layered)** com separação clara entre apresentação, aplicação, domínio e persistência. A implementação atual é uma **aplicação web monolítica modular** (`secureforgeweb_web/`), priorizando simplicidade operacional (um processo Node + PostgreSQL) em vez de microsserviços.
 
 ```mermaid
 flowchart TB
@@ -115,7 +115,7 @@ flowchart TB
 
 ### 2.2 Princípios arquiteturais
 
-1. **Simplicidade:** protótipo funcional, não produto industrial.
+1. **Simplicidade:** plataforma operacional enxuta, não suíte enterprise.
 2. **Modularidade:** cada capacidade (aplicação, checklist, achado, relatório) em módulo coeso.
 3. **Rastreabilidade:** todo achado vinculado a aplicação, item de checklist e recomendação.
 4. **Orientação à correção:** priorizar fluxo de melhoria, não apenas inventário de falhas.
@@ -152,7 +152,7 @@ flowchart TB
 | ID | Requisito | Critério |
 |---|---|---|
 | RNF01 | Usabilidade | Interface clara para equipes sem experiência AppSec avançada |
-| RNF02 | Desempenho | Respostas em até 2s para operações comuns em protótipo |
+| RNF02 | Desempenho | Respostas em até 2s para operações comuns na interface |
 | RNF03 | Manutenibilidade | Código modular, documentado e testável |
 | RNF04 | Segurança | Proteção de dados cadastrados; senhas com hash; validação de entrada |
 | RNF05 | Portabilidade | Execução local ou em container Docker |
@@ -287,23 +287,23 @@ erDiagram
 
 ## 5. Catálogo inicial de controles (checklist)
 
-O checklist é o núcleo do AppHardener. A versão inicial (`v1.0`) cobre categorias alinhadas às três disciplinas do módulo:
+O checklist é o núcleo da SecureForge Web. A versão **Essential v1.0** cobre categorias alinhadas a controles OWASP práticos:
 
-| Categoria | Exemplos de itens | Disciplina relacionada |
+| Categoria | Exemplos de itens | Referência típica |
 |---|---|---|
-| Autenticação | Política de senha, MFA, bloqueio por tentativas, expiração de sessão | Código Seguro / App Web |
-| Autorização | Controle de acesso por perfil, princípio do menor privilégio | App Web / Código Seguro |
-| Validação de entrada | Sanitização, parametrização de queries, validação server-side | App Web / Código Seguro |
-| Proteção de credenciais | Hash de senhas, rotação de segredos, ausência em repositório | Código Seguro |
-| Headers de segurança | CSP, HSTS, X-Frame-Options, X-Content-Type-Options | App Web |
-| Exposição de endpoints | Rotas administrativas protegidas, APIs sem autenticação | Redes / App Web |
-| Mensagens de erro | Sem vazamento de stack trace ou dados sensíveis | App Web |
-| Proteção de dados sensíveis | Criptografia em trânsito/repouso, mascaramento em logs | Código Seguro |
-| Superfície de ataque | Serviços expostos, portas desnecessárias, componentes públicos | Redes |
+| Autenticação | Política de senha, MFA, bloqueio por tentativas, expiração de sessão | ASVS / WSTG Auth |
+| Autorização | Controle de acesso por perfil, princípio do menor privilégio | ASVS Access Control |
+| Validação de entrada | Sanitização, parametrização de queries, validação server-side | ASVS Validation / Injection |
+| Proteção de credenciais | Hash de senhas, rotação de segredos, ausência em repositório | ASVS Cryptography / Secrets |
+| Headers de segurança | CSP, HSTS, X-Frame-Options, X-Content-Type-Options | ASVS HTTP Security |
+| Exposição de endpoints | Rotas administrativas protegidas, APIs sem autenticação | Superfície / exposição |
+| Mensagens de erro | Sem vazamento de stack trace ou dados sensíveis | Error handling |
+| Proteção de dados sensíveis | Criptografia em trânsito/repouso, mascaramento em logs | Data protection |
+| Superfície de ataque | Serviços expostos, portas desnecessárias, componentes públicos | Attack surface |
 
 Cada item possui: código (`AUTH-01`), título, descrição, referência OWASP/CWE quando aplicável e recomendação padrão associada.
 
-**Implementação atual (jul/2026):** além do catálogo **Essential v1.0** (24 itens), o sistema importa o **OWASP ASVS 5.0** (perfis Level 1 e Complete) via `pnpm db:import-asvs`, com sincronização administrativa (`Sync ASVS` / `pnpm db:sync-asvs`). Textos traduzidos (`titlePt`, capítulos) e interface **PT/EN** estão operacionais — ver [RELATORIO.md](RELATORIO.md).
+**Implementação atual (jul/2026):** além do catálogo **Essential v1.0** (24 itens), o sistema importa o **OWASP ASVS 5.0** (perfis Level 1 e Complete) via `pnpm db:import-asvs`, com sincronização administrativa (`Sync ASVS` / `pnpm db:sync-asvs`). Textos traduzidos (`titlePt`, capítulos) e interface **PT/EN** estão operacionais — ver [MANUAL.md](MANUAL.md) e o [README do repositório](../../README.md).
 
 ---
 
@@ -510,23 +510,22 @@ sequenceDiagram
 
 ---
 
-## 11. Stack tecnológica recomendada
+## 11. Stack tecnológica
 
-Para equipe de até 4 integrantes, sugere-se stack produtiva e alinhada ao contexto acadêmico:
+Stack **efetivamente utilizada** pela SecureForge Web:
 
-| Camada | Tecnologia sugerida | Justificativa |
+| Camada | Tecnologia | Notas |
 |---|---|---|
-| Frontend | React + TypeScript + Vite | Componentização, tipagem, ecossistema maduro |
-| UI | Tailwind CSS ou Material UI | Agilidade na construção de formulários e dashboards |
-| Backend | Node.js (NestJS) **ou** Python (FastAPI) | APIs REST claras, boa documentação OpenAPI |
-| Banco | PostgreSQL | Relacional, adequado ao modelo de domínio |
-| ORM | Prisma (Node) / SQLAlchemy (Python) | Produtividade e migrações |
-| Auth | JWT + bcrypt | Simples para protótipo |
-| Relatório | Template HTML + Puppeteer/wkhtmltopdf (opcional) | Exportação leve |
-| Container | Docker + docker-compose | Reprodutibilidade em laboratório |
-| Testes | Jest/Pytest + Supertest | Cobertura de API e regras críticas |
+| Frontend | React 19 + TypeScript + Vite 7 | SPA; TanStack Query, wouter, Tailwind |
+| Backend | Node.js 22 + Express + tRPC | API tipada; PDF e assessores in-process |
+| Banco | PostgreSQL 16 | Modelo relacional do domínio |
+| ORM | Drizzle | Migrações e tipagem |
+| Auth | JWT (cookie) + bcrypt + RBAC | Sessão autenticada |
+| Relatório | Geração de PDF no backend | Exportação de postura |
+| Container | Docker Compose (opcional) | PostgreSQL local |
+| Testes | Vitest / TypeScript check | `pnpm test`, `pnpm check` |
 
-> A equipe pode validar a stack com base na familiaridade do grupo. O importante é manter a separação em camadas e a clareza do domínio.
+> Detalhes operacionais: [`readme-web.md`](../readme-web.md) e o [diagrama oficial](screenshots/arquitetura.png).
 
 ---
 
@@ -534,30 +533,28 @@ Para equipe de até 4 integrantes, sugere-se stack produtiva e alinhada ao conte
 
 ```mermaid
 flowchart TB
-    subgraph Ambiente["Ambiente Local / Laboratório"]
+    subgraph Ambiente["Ambiente local de desenvolvimento"]
         Browser[Navegador]
-        subgraph DockerCompose
-            FE[Container Frontend\n:3000]
-            BE[Container Backend\n:8080]
-            PG[(PostgreSQL\n:5432)]
-        end
+        FE[Vite SPA :5173]
+        BE[Express/tRPC :3000]
+        PG[(PostgreSQL :5432)]
     end
 
     Browser --> FE
-    FE --> BE
+    FE -->|proxy /api| BE
     BE --> PG
 ```
 
 **Configuração mínima:**
-- Variáveis de ambiente para URL do banco, segredo JWT e porta da API.
-- Volume persistente para dados do PostgreSQL.
-- Script de seed para checklist v1.0 na primeira execução.
+- Variáveis de ambiente para URL do banco, segredo JWT e porta da API (ver `.env.example`).
+- PostgreSQL local ou via `docker compose`.
+- `pnpm db:setup` para migrar, seed do Essential v1.0 e importação ASVS.
 
 ---
 
 ## 13. Segurança da própria ferramenta
 
-Embora o AppHardener avalie outras aplicações, ela também deve adotar boas práticas:
+Embora a SecureForge Web avalie outras aplicações, ela também deve adotar boas práticas:
 
 | Controle | Implementação |
 |---|---|
@@ -592,16 +589,16 @@ Embora o AppHardener avalie outras aplicações, ela também deve adotar boas pr
 
 ---
 
-## 15. Plano de entregas incrementais
+## 15. Evolução incremental
 
-Alinhado à disciplina com entregas parciais:
+Marcos principais da construção da plataforma:
 
-| Sprint | Entrega | Funcionalidades |
+| Etapa | Marco | Funcionalidades |
 |---|---|---|
-| **S1** | Fundação | Setup do projeto, modelagem, cadastro de aplicação, checklist seed |
-| **S2** | Análise | Fluxo de análise, respostas do checklist, geração automática de achados |
-| **S3** | Hardening | Severidade, prioridade, recomendações, atualização de status |
-| **S4** | Consolidação | Dashboard, relatório, autenticação, refinamentos e apresentação final |
+| **1** | Fundação | Setup do projeto, modelagem, cadastro de aplicação, seed de checklist |
+| **2** | Análise | Fluxo de análise, respostas do checklist, geração automática de achados |
+| **3** | Hardening | Severidade, prioridade, recomendações, atualização de status |
+| **4** | Consolidação | Dashboard, relatório PDF, autenticação, assessores HTTP/Git/IA, ASVS |
 
 ---
 
@@ -609,16 +606,16 @@ Alinhado à disciplina com entregas parciais:
 
 | Risco | Impacto | Mitigação |
 |---|---|---|
-| Escopo excessivo | Atraso nas entregas | Priorizar RF01–RF07; RF08–RF12 como evolução |
-| Checklist genérico demais | Baixa utilidade prática | Ancorar itens em OWASP Top 10 e exemplos reais |
-| Complexidade técnica | Dificuldade da equipe | Monólito modular; evitar microsserviços |
-| Falta de dados para demo | Apresentação fraca | Cadastrar aplicação de laboratório (ex.: app vulnerável controlada) |
+| Escopo excessivo | Atraso no desenvolvimento | Priorizar RF01–RF07; RF08–RF12 como evolução |
+| Checklist genérico demais | Baixa utilidade prática | Ancorar itens em OWASP Top 10 / ASVS e exemplos reais |
+| Complexidade técnica | Dificuldade de manutenção | Monólito modular; evitar microsserviços |
+| Falta de dados para demo | Demonstração fraca | Cadastrar alvo controlado (ex.: OWASP Juice Shop) |
 
 ---
 
-## 17. Evoluções futuras (pós-protótipo)
+## 17. Evoluções futuras
 
-Itens já entregues no protótipo atual (jul/2026) — ver [RELATORIO.md](RELATORIO.md):
+Capacidades já disponíveis na plataforma atual (jul/2026) — ver [MANUAL.md](MANUAL.md) e [README](../../README.md):
 
 - Análise passiva de headers HTTP e análise estática de repositório Git.
 - Assistente IA por usuário (OpenAI, Gemini, Azure, custom).
@@ -630,21 +627,22 @@ Evoluções ainda previstas:
 - Comparativo longitudinal entre versões de análise (maturidade ao longo do tempo).
 - Templates de checklist por tipo de app (API REST, SPA, monólito).
 - Exportação para formatos usados em auditorias externas.
-- Pipeline CI/CD automatizado; vídeo demo formal.
+- Pipeline CI/CD automatizado; ampliação da documentação em vídeo.
 
 ---
 
 ## 18. Conclusão
 
-O AppHardener, conforme definido neste projeto arquitetural, atende ao perfil esperado: uma ferramenta **leve, guiada e orientada à correção** para diagnóstico e hardening de aplicações web. A arquitetura em camadas, o modelo de domínio centrado em aplicação–análise–achado–recomendação e o catálogo de checklist alinhado ao módulo de Segurança Aplicada garantem coerência acadêmica e viabilidade de implementação por uma equipe de até quatro integrantes.
+A SecureForge Web materializa, neste projeto arquitetural, uma plataforma **leve, guiada e orientada à correção** para diagnóstico e hardening de aplicações web. A arquitetura em camadas, o modelo de domínio centrado em aplicação–análise–achado–recomendação e o catálogo de checklist alinhado a OWASP/ASVS sustentam um fluxo rastreável e demonstrável.
 
-O protótipo resultante será **demonstrável, útil em contextos reais de pequena escala** e com caminho claro de evolução, sem competir com scanners ou plataformas enterprise.
+A ferramenta é **útil em contextos reais de pequena e média escala**, com caminho claro de evolução, sem pretender substituir scanners ou plataformas enterprise.
 
 ---
 
 ## Referências
 
 - OWASP Top 10 (2021/2025)
-- OWASP Application Security Verification Standard (ASVS)
+- OWASP Application Security Verification Standard (ASVS) 5.0
+- OWASP Web Security Testing Guide (WSTG)
 - OWASP Cheat Sheet Series
-- Conteúdos das disciplinas: Segurança de Redes, Segurança de Aplicações Web e Móveis, Projeto e Desenvolvimento de Código Seguro
+- Repositório: [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb)
