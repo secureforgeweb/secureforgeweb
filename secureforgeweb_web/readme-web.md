@@ -112,7 +112,7 @@ Ficheiros em **`docs/`** e links oficiais:
 | [`docs/screenshots/`](docs/screenshots/) | Capturas de ecrã |
 | [Vídeos de demonstração (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e funcionalidades (SBSeg SF) |
 
-README internacional (inglês) na **raiz do repositório**: [`../README.md`](../README.md).
+README do repositório na **raiz**: [`../README.md`](../README.md).
 
 ---
 

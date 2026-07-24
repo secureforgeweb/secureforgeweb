@@ -28,7 +28,7 @@ Vídeos técnicos de instalação, funcionalidades e demonstração da ferrament
 - **GitHub:** [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb)
 - **Licença:** MIT (arquivo `LICENSE` na raiz do repositório)
 - **README operacional (PT):** [`../readme-web.md`](../readme-web.md)
-- **README do repositório (EN):** [`../../README.md`](../../README.md)
+- **README do repositório:** [`../../README.md`](../../README.md)
 
 ## O que não vai para o GitHub
 
