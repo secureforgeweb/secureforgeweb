@@ -19,6 +19,33 @@
 - **`frontend/`** — React, Vite, Tailwind, shadcn/ui. Código em `frontend/src/`.
 - **`backend/`** — Node, Express, tRPC, Drizzle, PostgreSQL.
 
+### Pré-requisito: pnpm via Corepack (Windows)
+
+O Node.js inclui o **Corepack**, usado para ativar o `pnpm` do projeto.
+
+> **Importante (Windows):** o comando `corepack enable` precisa de um terminal **como Administrador**. Sem isso, aparece erro de permissão (*Access is denied* / *EPERM*).
+
+```powershell
+# 1) Abra PowerShell ou CMD com "Executar como administrador"
+# 2) Execute:
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+Depois feche o terminal de administrador e continue num shell **normal**.
+
+**Se não puder usar Administrador**, escolha uma alternativa:
+
+```powershell
+# A) pnpm global via npm
+npm install -g pnpm
+
+# B) instalador standalone (sem Corepack)
+iwr https://get.pnpm.io/install.ps1 -useb | iex
+```
+
+Confirme: `pnpm -v`.
+
 **Variáveis:** copie **`.env.example`** para **`.env` nesta pasta** (`secureforgeweb_web/.env`).
 
 ```powershell
@@ -30,9 +57,18 @@ pnpm dev
 
 | Serviço | URL |
 |---------|-----|
-| Frontend | http://localhost:5173 |
-| API (tRPC) | http://localhost:3000/api/trpc |
+| Frontend | http://localhost:5173 (ou https://localhost:5173 com TLS local) |
+| API (tRPC) | http://localhost:3000/api/trpc (ou https) |
 | Health | http://localhost:3000/api/health |
+
+### HTTPS local (demo / autoavaliação de headers)
+
+```powershell
+pnpm https:setup   # gera certs mkcert em certs/ e sugere vars no .env
+```
+
+No `.env`: `VITE_DEV_HTTPS=1`, `HTTPS_CERT`/`HTTPS_KEY`, `ENABLE_SECURE_HEADERS=1`, `FRONTEND_URL=https://localhost:5173`.  
+Para o checklist HTTP (CSP/HSTS), cadastre a app com **`https://localhost:3000`**.
 
 Mínimo no `.env`:
 

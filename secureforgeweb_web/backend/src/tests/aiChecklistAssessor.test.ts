@@ -188,3 +188,52 @@ describe("aiChecklistAssessor — buildAiAssessmentContext", () => {
     expect(ctx.corpus.length).toBeGreaterThan(0);
   });
 });
+
+describe("mergeLlmSuggestionsPreferringEvidence", () => {
+  it("não deixa o LLM sobrescrever evidência HTTP/Git de alta confiança", async () => {
+    const { mergeLlmSuggestionsPreferringEvidence } = await import("../services/aiChecklistAssessor.js");
+    const base = [
+      {
+        itemId: 1,
+        itemCode: "DATA-01",
+        compliance: "conforme" as const,
+        confidence: 98,
+        evidence: "HTTPS",
+        rationale: "ok",
+        source: "ai" as const,
+      },
+      {
+        itemId: 2,
+        itemCode: "SECRET-01",
+        compliance: "conforme" as const,
+        confidence: 80,
+        evidence: "env",
+        rationale: "ok",
+        source: "ai" as const,
+      },
+    ];
+    const llm = [
+      {
+        itemId: 1,
+        itemCode: "DATA-01",
+        compliance: "nao_conforme" as const,
+        confidence: 70,
+        evidence: "guess",
+        rationale: "llm",
+        source: "ai" as const,
+      },
+      {
+        itemId: 2,
+        itemCode: "SECRET-01",
+        compliance: "nao_conforme" as const,
+        confidence: 60,
+        evidence: "guess",
+        rationale: "llm",
+        source: "ai" as const,
+      },
+    ];
+    const merged = mergeLlmSuggestionsPreferringEvidence(base, llm);
+    expect(merged.find((s) => s.itemCode === "DATA-01")?.compliance).toBe("conforme");
+    expect(merged.find((s) => s.itemCode === "SECRET-01")?.compliance).toBe("conforme");
+  });
+});

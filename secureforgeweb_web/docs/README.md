@@ -9,6 +9,7 @@
 | [MANUAL.md](MANUAL.md) | Usuários | Manual de uso (fluxo completo + admin) |
 | [RELATORIO.md](RELATORIO.md) | Acadêmico | **Relatório** consolidado — estado atual |
 | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Acadêmico | Arquitetura alvo e requisitos |
+| [overleaf-artigo/](overleaf-artigo/) | Acadêmico | Pacote LaTeX SBC (resultados 13% Juice Shop / 100% SecureForge pós-hardening) |
 
 ## Início rápido
 
@@ -34,7 +35,8 @@
 | Cadastro de aplicações (URL e/ou repo Git) | Concluído |
 | Wizard com salvamento parcial e navegação livre | Concluído |
 | Análises automáticas (HTTP, Git, assistente IA) | Concluído |
-| Achados, dashboard, PDF | Concluído |
+| HTTPS local (mkcert) + headers Helmet/CSP/HSTS | Concluído |
+| Autoavaliação pós-hardening (score 100% Essential) | Concluído (24/07/2026) |
 
 Detalhes: [RELATORIO.md](RELATORIO.md)
 

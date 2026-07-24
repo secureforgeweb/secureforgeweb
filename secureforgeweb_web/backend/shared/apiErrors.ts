@@ -33,6 +33,8 @@ export const API_ERROR_MESSAGES = {
     "assessment.missingUrlsForAi": "Cadastre URL base e/ou repositório Git para o assistente IA.",
     "assessment.unsupportedScope": "Escopo de avaliação não suportado",
     "assessment.autoFailed": "Falha na avaliação automática",
+    "assessment.evidenceFailed":
+      "Não foi possível coletar evidências HTTP ou do repositório. Use https://localhost:3000 (ou :5173), cadastre o Git público e faça logout/login se a sessão expirou.",
     "analysis.completeAllItems": "Responda todos os itens antes de concluir ({answered}/{total})",
     "analysis.invalidChecklistItem": "Item de checklist inválido: {itemId}",
     "ai.missingBaseUrl": "Informe a URL base da API do provedor.",
@@ -103,6 +105,8 @@ export const API_ERROR_MESSAGES = {
     "assessment.missingUrlsForAi": "Register base URL and/or Git repository for the AI assistant.",
     "assessment.unsupportedScope": "Unsupported assessment scope",
     "assessment.autoFailed": "Automated assessment failed",
+    "assessment.evidenceFailed":
+      "Could not collect HTTP or repository evidence. Use https://localhost:3000 (or :5173), register a public Git URL, and log out/in if the session expired.",
     "analysis.completeAllItems": "Answer all items before completing ({answered}/{total})",
     "analysis.invalidChecklistItem": "Invalid checklist item: {itemId}",
     "ai.missingBaseUrl": "Enter the provider API base URL.",

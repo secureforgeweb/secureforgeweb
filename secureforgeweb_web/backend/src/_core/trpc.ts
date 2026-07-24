@@ -45,6 +45,7 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(requireUser);
 
+/** Admin-only — least privilege: elevated routes require role === 'admin'. */
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
@@ -62,7 +63,7 @@ export const adminProcedure = t.procedure.use(
   }),
 );
 
-// Procedure para security-analyst e admin (ambos podem alterar status de incidentes)
+// Least privilege: security-analyst may act on incidents; admin retains full access.
 export const analystProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;

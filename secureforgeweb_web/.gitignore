@@ -1,0 +1,8 @@
+# Local package ignores (root repo .gitignore also covers these)
+.env
+.env.*
+!.env.example
+certs/*.pem
+node_modules/
+dist/
+*.log

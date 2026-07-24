@@ -565,7 +565,7 @@ Embora o AppHardener avalie outras aplicações, ela também deve adotar boas pr
 | Segredos | JWT secret e credenciais via variáveis de ambiente |
 | Headers | HSTS, CSP básico, X-Content-Type-Options no frontend servido |
 | Logs | Sem registrar dados sensíveis |
-| HTTPS | Recomendado mesmo em ambiente de demonstração |
+| HTTPS | Recomendado mesmo em ambiente de demonstração (`pnpm https:setup`; URL de análise preferencial: `https://localhost:3000`) |
 
 ---
 

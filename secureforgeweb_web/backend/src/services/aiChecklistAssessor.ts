@@ -195,13 +195,24 @@ export async function buildAiAssessmentContext(input: {
   repositoryUrl: string | null;
   techStack: string | null;
   description: string | null;
-}): Promise<AiAssessmentContext> {
+}): Promise<AiAssessmentContext & { httpError?: string; gitError?: string }> {
+  let httpError: string | undefined;
+  let gitError: string | undefined;
+
   const [httpSnapshot, gitSnapshot] = await Promise.all([
     input.baseUrl?.trim()
-      ? fetchHttpSecuritySnapshot(input.baseUrl).catch(() => null)
+      ? fetchHttpSecuritySnapshot(input.baseUrl).catch((err) => {
+          httpError = err instanceof Error ? err.message : String(err);
+          console.warn("[AI Assessment] HTTP snapshot failed:", httpError);
+          return null;
+        })
       : Promise.resolve(null),
     input.repositoryUrl?.trim()
-      ? fetchGitRepositorySnapshot(input.repositoryUrl).catch(() => null)
+      ? fetchGitRepositorySnapshot(input.repositoryUrl).catch((err) => {
+          gitError = err instanceof Error ? err.message : String(err);
+          console.warn("[AI Assessment] Git snapshot failed:", gitError);
+          return null;
+        })
       : Promise.resolve(null),
   ]);
 
@@ -220,6 +231,8 @@ export async function buildAiAssessmentContext(input: {
     gitSnapshot,
     corpus,
     npmAuditSummary,
+    httpError,
+    gitError,
   };
 }
 
@@ -229,9 +242,10 @@ function assessExpos01(ctx: AiAssessmentContext): HeuristicResult {
     /protectedProcedure|adminProcedure|requireAuth|authenticate|jwt\.verify|passport\.authenticate/i.test(
       ctx.corpus
     );
-  // Ignore intentional public auth flows (login / password reset).
+  // Flag only sensitive admin mutations exposed as public — not password-reset flows.
   const publicSensitive =
-    /publicProcedure[\s\S]{0,200}(?:deleteUser|updateUser|adminRouter|resetUserPassword)/i.test(ctx.corpus);
+    /(?:deleteUser|updateUserRole|updateUserInfo|adminRouter)\s*:\s*publicProcedure/i.test(ctx.corpus) ||
+    /publicProcedure[\s\S]{0,80}(?:deleteUserById|updateUserRole)\s*\(/i.test(ctx.corpus);
   const evidence = findEvidence(/protectedProcedure|adminProcedure|requireAuth/i, ctx.corpus, files);
 
   if (publicSensitive) {
@@ -291,9 +305,11 @@ function assessExpos02(ctx: AiAssessmentContext): HeuristicResult {
 
 function assessData02(ctx: AiAssessmentContext): HeuristicResult {
   const files = ctx.gitSnapshot?.files ?? [];
-  const sensitiveLog = /console\.(?:log|info|debug)\([^)]*(?:password|token|secret|cpf|ssn)/i.test(
-    ctx.corpus
-  );
+  // Avoid matching banners like "PASSWORD RESET EMAIL" — require assignment/key context.
+  const sensitiveLog =
+    /console\.(?:log|info|debug)\([^)]*(?:password\s*[:=]|token\s*[:=]|secret\s*[:=]|api[_-]?key\s*[:=]|cpf\s*[:=]|ssn\s*[:=])/i.test(
+      ctx.corpus
+    );
   const logRedaction =
     /redact|mask|sanitize.*log|pino.*redact|winston.*sanitize|redactSensitive|safeLog|logRedact/i.test(
       ctx.corpus
@@ -303,7 +319,7 @@ function assessData02(ctx: AiAssessmentContext): HeuristicResult {
     return result(
       "nao_conforme",
       80,
-      findEvidence(/console\.(?:log|info).*(?:password|token|secret)/i, ctx.corpus, files) ??
+      findEvidence(/console\.(?:log|info).*(?:password\s*[:=]|token\s*[:=]|secret\s*[:=])/i, ctx.corpus, files) ??
         "Possível log de dado sensível detectado.",
       "Senhas, tokens ou PII não devem aparecer em logs."
     );
@@ -326,7 +342,11 @@ function assessData02(ctx: AiAssessmentContext): HeuristicResult {
 
 function assessSurf01(ctx: AiAssessmentContext): HeuristicResult {
   const files = ctx.gitSnapshot?.files ?? [];
-  const debugRoutes = /\/debug|phpinfo|expose.*port|DEBUG\s*=\s*true/i.test(ctx.corpus);
+  // Match real debug routes / flags, not regex literals inside assessor source.
+  const debugRoutes =
+    /(?:app|router)\.(?:get|use|all)\(\s*['"`]\/debug['"`]|phpinfo\s*\(|['"`]DEBUG['"`]\s*:\s*true\b|process\.env\.DEBUG\s*===?\s*['"`]true['"`]/i.test(
+      ctx.corpus
+    );
   const bindAll = /app\.listen\([^)]*0\.0\.0\.0|listen\(\s*\{[^}]*host:\s*['"]0\.0\.0\.0['"]/i.test(
     ctx.corpus
   );
@@ -336,7 +356,7 @@ function assessSurf01(ctx: AiAssessmentContext): HeuristicResult {
     return result(
       "nao_conforme",
       77,
-      findEvidence(/\/debug|phpinfo|0\.0\.0\.0|DEBUG\s*=\s*true/i, ctx.corpus, files) ??
+      findEvidence(/(?:app|router)\.(?:get|use)\(\s*['"`]\/debug|phpinfo\s*\(|0\.0\.0\.0/i, ctx.corpus, files) ??
         "Endpoints ou binds de debug detectados.",
       "Serviços ou rotas de debug expõem superfície desnecessária."
     );
@@ -428,6 +448,34 @@ function assessGenericLimited(ctx: AiAssessmentContext, item: AiAssessmentItemIn
 
 function asAiSuggestions(suggestions: AutoAssessmentSuggestion[]): AutoAssessmentSuggestion[] {
   return suggestions.map((s) => ({ ...s, source: "ai" as const }));
+}
+
+/**
+ * LLM must not erase high-confidence HTTP/Git/heuristic results (false Critical/High in self-tests).
+ * Prefer base when confidence >= 75, or when base confidence beats the LLM suggestion.
+ */
+export function mergeLlmSuggestionsPreferringEvidence(
+  baseSuggestions: AutoAssessmentSuggestion[],
+  llmSuggestions: AutoAssessmentSuggestion[]
+): AutoAssessmentSuggestion[] {
+  const merged = new Map(baseSuggestions.map((s) => [s.itemCode, s]));
+  for (const llm of llmSuggestions) {
+    const base = merged.get(llm.itemCode);
+    if (!base) {
+      merged.set(llm.itemCode, llm);
+      continue;
+    }
+    const baseStrong = base.confidence >= 75;
+    const llmStronger = llm.confidence > base.confidence + 5;
+    if (baseStrong && !llmStronger) {
+      continue;
+    }
+    if (base.confidence >= llm.confidence) {
+      continue;
+    }
+    merged.set(llm.itemCode, llm);
+  }
+  return Array.from(merged.values());
 }
 
 function attachArtifactsToSuggestion(
@@ -717,8 +765,20 @@ export async function runAiAgentAssessment(input: {
 
   const context = await buildAiAssessmentContext(input);
   if (!context.httpSnapshot && !context.gitSnapshot) {
+    const hints: string[] = [];
+    if (!input.repositoryUrl?.trim()) {
+      hints.push("cadastre o repositório Git público na aplicação");
+    }
+    if (input.baseUrl?.trim()) {
+      hints.push(
+        "use URL HTTPS local (ex.: https://localhost:3000 ou https://localhost:5173) — HTTP falha quando o Vite/API sobem só com TLS"
+      );
+    }
+    if (context.httpError) hints.push(`HTTP: ${context.httpError}`);
+    if (context.gitError) hints.push(`Git: ${context.gitError}`);
     throw new Error(
-      "Não foi possível coletar evidências HTTP ou do repositório para o assistente IA."
+      "Não foi possível coletar evidências HTTP ou do repositório para o assistente IA. " +
+        (hints.length ? hints.join(" · ") : "Verifique URL base e repositório Git.")
     );
   }
 
@@ -734,17 +794,14 @@ export async function runAiAgentAssessment(input: {
     try {
       const llmSuggestions = await assessWithLlm(input.userId, context, input.items);
       if (llmSuggestions.length > 0) {
-        const merged = new Map(baseSuggestions.map((s) => [s.itemCode, s]));
-        for (const s of llmSuggestions) {
-          merged.set(s.itemCode, s);
-        }
+        const merged = mergeLlmSuggestionsPreferringEvidence(baseSuggestions, llmSuggestions);
         return {
           context,
           result: {
             mode: "llm",
             provider: configuredModelKey ?? `${llmConfig.provider}:${llmConfig.model}`,
             contextSummary: summarizeAiContext(context),
-            suggestions: attachArtifactsToSuggestions(Array.from(merged.values()), context),
+            suggestions: attachArtifactsToSuggestions(merged, context),
           },
         };
       }

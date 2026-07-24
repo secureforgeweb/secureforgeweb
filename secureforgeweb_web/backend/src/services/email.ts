@@ -12,6 +12,7 @@
  */
 import nodemailer from "nodemailer";
 import { safeLog } from "../lib/logRedact.js";
+import { escapeHtml } from "../lib/htmlEscape.js";
 
 interface SendResetEmailOptions {
   to: string;
@@ -32,6 +33,8 @@ export interface SendResetEmailResult {
 
 /** Build the HTML body for the reset email */
 function buildEmailHtml(userName: string, resetUrl: string, expiresMinutes: number): string {
+  const safeName = escapeHtml(userName);
+  const safeUrl = escapeHtml(resetUrl);
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -49,7 +52,7 @@ function buildEmailHtml(userName: string, resetUrl: string, expiresMinutes: numb
         <tr>
           <td style="padding:32px;">
             <p style="color:#8b949e;font-size:13px;margin:0 0 8px 0;font-family:monospace;letter-spacing:1px;text-transform:uppercase;">REDEFINIÇÃO DE SENHA</p>
-            <h2 style="color:#e6edf3;font-size:22px;margin:0 0 16px 0;">Olá, ${userName}!</h2>
+            <h2 style="color:#e6edf3;font-size:22px;margin:0 0 16px 0;">Olá, ${safeName}!</h2>
             <p style="color:#8b949e;font-size:15px;line-height:1.6;margin:0 0 24px 0;">
               Recebemos uma solicitação para redefinir a senha da sua conta no
               <strong style="color:#e6edf3;">Incident Security System</strong>.
@@ -68,14 +71,14 @@ function buildEmailHtml(userName: string, resetUrl: string, expiresMinutes: numb
             <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px 0;">
               <tr>
                 <td align="center">
-                  <a href="${resetUrl}" style="display:inline-block;background:#00b4d8;color:#0d1117;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:6px;font-family:monospace;">
+                  <a href="${safeUrl}" style="display:inline-block;background:#00b4d8;color:#0d1117;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:6px;font-family:monospace;">
                     Redefinir Minha Senha
                   </a>
                 </td>
               </tr>
             </table>
             <p style="color:#8b949e;font-size:12px;margin:0 0 8px 0;">Se o botão não funcionar, copie e cole o link abaixo no seu navegador:</p>
-            <p style="background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#00b4d8;word-break:break-all;margin:0 0 24px 0;">${resetUrl}</p>
+            <p style="background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#00b4d8;word-break:break-all;margin:0 0 24px 0;">${safeUrl}</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d1117;border:1px solid #21262d;border-radius:6px;">
               <tr>
                 <td style="padding:16px 20px;">
@@ -248,12 +251,12 @@ export async function sendPasswordResetEmail(
   safeLog("warn", "[Email] SMTP falhou:", smtpResult.error, "Usando fallback in-band.");
 
   // ── 3. Final fallback: log + return link in-band ────────────────────────────
-  console.log("\n========== PASSWORD RESET EMAIL (FALLBACK MODE) ==========");
+  safeLog("log", "========== PASSWORD RESET EMAIL (FALLBACK MODE) ==========");
   safeLog("log", "To:", to);
   safeLog("log", "Subject:", subject);
   safeLog("log", "Reset URL:", resetUrl);
-  console.log(`Expires in: ${expiresMinutes} minutes`);
-  console.log("==========================================================\n");
+  safeLog("log", "Expires in:", `${expiresMinutes} minutes`);
+  safeLog("log", "==========================================================");
 
   return {
     sent: true,

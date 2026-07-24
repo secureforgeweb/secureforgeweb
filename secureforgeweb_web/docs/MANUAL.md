@@ -54,7 +54,7 @@ Cada usuário possui **configuração independente** de LLM. Não é compartilha
 1. Menu **Aplicações** → **Nova Aplicação**
 2. Preencha:
    - **Nome** (obrigatório)
-   - **URL base** (ex.: `https://app.exemplo.com`)
+   - **URL base** (ex.: `https://app.exemplo.com` — em local, preferir **`https://localhost:3000`** para medir CSP/HSTS do Helmet; `https://localhost:5173` também funciona e a API é sondada automaticamente)
    - **Repositório Git** (ex.: `https://github.com/org/projeto` — repositório público HTTPS)
    - **Stack tecnológica** (opcional)
    - **Descrição** (opcional)
@@ -224,6 +224,9 @@ Admin pode abrir análises e aplicações de outros usuários (somente leitura o
 
 | Problema | Ação |
 |---|---|
+| `corepack enable` falha no Windows | Abra o terminal **como Administrador** e rode de novo; ou use `npm install -g pnpm` / instalador standalone (ver `readme-web.md`) |
+| `JWSSignatureVerificationFailed` / sessão inválida | **Logout** e faça **login** de novo (cookie assinado com `JWT_SECRET` antigo). Limpe cookies de `localhost` se persistir |
+| Assistente IA sem evidências HTTP/Git | Edite a app: URL **`https://localhost:3000`** (ou `https://localhost:5173`) + repositório Git público. Com TLS ativo, `http://` falha. Se DATA-01/HEADER falharem com HTTPS, reinicie `pnpm dev` (assessor precisa confiar no certificado mkcert) |
 | API não responde | Verifique `pnpm dev` e `DATABASE_URL` no `.env` |
 | Checklist vazio | Execute `pnpm db:setup` (seed + import ASVS) |
 | ASVS desatualizado | Admin → Checklist Items → **Sync ASVS** ou `pnpm db:sync-asvs` |

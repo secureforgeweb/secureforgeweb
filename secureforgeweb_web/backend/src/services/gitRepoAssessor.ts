@@ -520,7 +520,7 @@ function assessGitItem(code: GitAssessmentItemCode, ctx: ScanContext): Assessmen
     case "INPUT-03": {
       const helmet = /helmet\s*\(|helmetMiddleware|contentSecurityPolicy/i.test(ctx.corpus);
       const sanitize = /sanitize|escapeHtml|DOMPurify|xss|encodeURIComponent/i.test(ctx.corpus);
-      const evidence = findEvidence(/helmet|contentSecurityPolicy|DOMPurify|sanitize/i, ctx);
+      const evidence = findEvidence(/helmet|contentSecurityPolicy|DOMPurify|sanitize|escapeHtml/i, ctx);
       if (helmet && sanitize) {
         return result(
           "conforme",

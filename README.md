@@ -132,7 +132,7 @@ flowchart LR
 
 | Layer | Suggestion |
 |-------|------------|
-| **Host (dev)** | **Windows 10/11**, **Linux**, or **macOS**; **Node.js 22**; **pnpm** via **Corepack**. |
+| **Host (dev)** | **Windows 10/11**, **Linux**, or **macOS**; **Node.js 22**; **pnpm** via **Corepack** (on Windows, `corepack enable` needs **Administrator**). |
 | **RAM** | ≥ **8 GB** for comfortable dev. |
 | **Database** | **PostgreSQL 16+** locally, via Docker Compose, or hosted. |
 | **Browser** | Recent **Chrome**, **Edge**, or **Firefox**. |
@@ -145,7 +145,7 @@ flowchart LR
 |------------|--------|
 | **Git** | Clone and update this repository. |
 | **Node.js** | **22.x** (see `secureforgeweb_web/package.json`). |
-| **Corepack + pnpm** | `corepack enable`; **`pnpm install`** inside **`secureforgeweb_web/`**. |
+| **Corepack + pnpm** | Enable Corepack, then **`pnpm install`** inside **`secureforgeweb_web/`**. On **Windows**, `corepack enable` usually needs an **Administrator** terminal (see §6). |
 | **PostgreSQL** | Required (`DATABASE_URL`). |
 | **Optional: Docker** | `docker compose up -d` in `secureforgeweb_web/` for local Postgres. |
 
@@ -165,9 +165,10 @@ flowchart LR
 ## 5.2 Production-oriented checklist
 
 1. Rotate **`JWT_SECRET`** and database credentials.
-2. Serve behind **HTTPS** and a reverse proxy.
-3. Restrict network egress if assessments run against untrusted hosts.
-4. Do not expose development OAuth bypass or default admin credentials publicly.
+2. Serve behind **HTTPS** (local demo: `pnpm https:setup` in `secureforgeweb_web/`, set `VITE_DEV_HTTPS=1`, `ENABLE_SECURE_HEADERS=1`, and cert paths).
+3. For checklist **HEADER-*** / **DATA-01**, register the app base URL as **`https://localhost:3000`** (API with Helmet) — Vite `:5173` also works; the assessor probes the API automatically.
+4. Restrict network egress if assessments run against untrusted hosts.
+5. Do not expose development OAuth bypass or default admin credentials publicly.
 
 ## 5.3 Disclaimer
 
@@ -179,10 +180,36 @@ This software is provided **as-is** for **education and authorised security asse
 
 > **Full walkthrough (Portuguese, Windows):** **`secureforgeweb_web/readme-web.md`**.
 
-**Short path** (from repository root):
+### 6.0 Install pnpm (Corepack)
+
+Node.js ships with **Corepack**, which manages the `pnpm` version pinned by the project.
+
+**Windows:** `corepack enable` writes shims under the Node install directory and typically **requires an elevated (Administrator) PowerShell or Command Prompt**. Without elevation you may see *Access is denied* / *EPERM*.
+
+```powershell
+# 1) Open PowerShell or CMD "as Administrator"
+# 2) Then:
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+
+Close the admin terminal afterwards and continue in a **normal** shell.
+
+**Alternatives if you cannot use Administrator:**
+
+```powershell
+# Option A — install pnpm via npm (user scope)
+npm install -g pnpm
+
+# Option B — standalone installer (no Corepack)
+iwr https://get.pnpm.io/install.ps1 -useb | iex
+```
+
+**Linux / macOS:** `corepack enable` usually works without root if Node was installed for your user; otherwise use `sudo corepack enable` or the alternatives above.
+
+**Short path** (from repository root, after `pnpm` is available):
 
 ```bash
-corepack enable
 cd secureforgeweb_web
 ```
 

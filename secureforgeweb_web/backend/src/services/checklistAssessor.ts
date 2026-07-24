@@ -5,6 +5,8 @@ import {
   buildHttpScanSummaryArtifact,
   mergeArtifacts,
 } from "./assessmentEvidence.js";
+import https from "node:https";
+import http from "node:http";
 
 export type { AssessmentEvidenceArtifact };
 
@@ -63,8 +65,26 @@ export function normalizeAssessmentUrl(raw: string): string {
 }
 
 export async function fetchHttpSecuritySnapshot(baseUrl: string): Promise<HttpSecuritySnapshot> {
-  const requestedUrl = normalizeAssessmentUrl(baseUrl);
-  const primary = await fetchOnce(requestedUrl);
+  let requestedUrl = normalizeAssessmentUrl(baseUrl);
+  let primary: HttpSecuritySnapshot;
+  try {
+    primary = await fetchOnce(requestedUrl);
+  } catch (err) {
+    // Local demo often switches to HTTPS (mkcert) while the app is still registered as http://
+    try {
+      const u = new URL(requestedUrl);
+      const isLocal = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+      if (u.protocol === "http:" && isLocal) {
+        u.protocol = "https:";
+        requestedUrl = u.toString();
+        primary = await fetchOnce(requestedUrl);
+      } else {
+        throw err;
+      }
+    } catch {
+      throw err;
+    }
+  }
 
   // When the app UI is on Vite (:5173), security headers live on the API (:3000).
   // Probe /api/health on the sibling API port and merge header evidence for HEADER-*.
@@ -74,22 +94,36 @@ export async function fetchHttpSecuritySnapshot(baseUrl: string): Promise<HttpSe
     const isVitePort = u.port === "5173" || u.port === "5174" || u.port === "4173";
     if (isVitePort) {
       const apiUrl = new URL(u.toString());
+      apiUrl.protocol = "https:";
       apiUrl.port = process.env.PORT?.trim() || "3000";
       apiUrl.pathname = "/api/health";
       apiUrl.search = "";
       apiUrl.hash = "";
-      const apiSnap = await fetchOnce(apiUrl.toString());
-      for (const [k, v] of Object.entries(apiSnap.headers)) {
-        if (!mergedHeaders[k]?.trim() && v?.trim()) mergedHeaders[k] = v;
-      }
-      // Prefer API security headers when present (CSP/HSTS/etc.).
-      for (const name of [
-        "content-security-policy",
-        "strict-transport-security",
-        "x-frame-options",
-        "x-content-type-options",
-      ]) {
-        if (apiSnap.headers[name]?.trim()) mergedHeaders[name] = apiSnap.headers[name];
+      try {
+        const apiSnap = await fetchOnce(apiUrl.toString());
+        for (const [k, v] of Object.entries(apiSnap.headers)) {
+          if (!mergedHeaders[k]?.trim() && v?.trim()) mergedHeaders[k] = v;
+        }
+        for (const name of [
+          "content-security-policy",
+          "strict-transport-security",
+          "x-frame-options",
+          "x-content-type-options",
+        ]) {
+          if (apiSnap.headers[name]?.trim()) mergedHeaders[name] = apiSnap.headers[name];
+        }
+      } catch {
+        // If HTTPS API probe fails, try HTTP (mixed local setups).
+        apiUrl.protocol = "http:";
+        const apiSnap = await fetchOnce(apiUrl.toString());
+        for (const name of [
+          "content-security-policy",
+          "strict-transport-security",
+          "x-frame-options",
+          "x-content-type-options",
+        ]) {
+          if (apiSnap.headers[name]?.trim()) mergedHeaders[name] = apiSnap.headers[name];
+        }
       }
     }
   } catch {
@@ -99,7 +133,108 @@ export async function fetchHttpSecuritySnapshot(baseUrl: string): Promise<HttpSe
   return { ...primary, headers: mergedHeaders };
 }
 
+function isLocalHostname(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+/** Prefer 127.0.0.1 over localhost to avoid IPv6 (::1) resolution issues on Windows. */
+function preferIpv4Localhost(url: string): string {
+  try {
+    const u = new URL(url);
+    if (u.hostname === "localhost") {
+      u.hostname = "127.0.0.1";
+      return u.toString();
+    }
+  } catch {
+    // keep original
+  }
+  return url;
+}
+
+function fetchOnceWithNodeHttp(requestedUrl: string, timeoutMs: number): Promise<HttpSecuritySnapshot> {
+  return new Promise((resolve, reject) => {
+    let parsed: URL;
+    try {
+      parsed = new URL(preferIpv4Localhost(requestedUrl));
+    } catch {
+      reject(new Error("URL base inválida"));
+      return;
+    }
+
+    const lib = parsed.protocol === "https:" ? https : http;
+    const originalHost = new URL(requestedUrl).hostname;
+    const req = lib.request(
+      parsed,
+      {
+        method: "GET",
+        headers: {
+          "User-Agent": ASSESSOR_USER_AGENT,
+          Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+          Host: new URL(requestedUrl).host,
+        },
+        timeout: timeoutMs,
+        rejectUnauthorized: false,
+        // SNI: cert is issued for localhost even when we connect via 127.0.0.1
+        servername: originalHost === "127.0.0.1" ? "localhost" : originalHost,
+      },
+      (res) => {
+        // Follow one redirect (common for trailing slash / http→https).
+        const location = res.headers.location;
+        if (
+          res.statusCode &&
+          res.statusCode >= 300 &&
+          res.statusCode < 400 &&
+          typeof location === "string" &&
+          location.length > 0
+        ) {
+          res.resume();
+          const next = new URL(location, parsed).toString();
+          fetchOnceWithNodeHttp(next, timeoutMs).then(resolve, reject);
+          return;
+        }
+
+        const headers: Record<string, string> = {};
+        for (const [key, value] of Object.entries(res.headers)) {
+          if (typeof value === "string") headers[key.toLowerCase()] = value;
+          else if (Array.isArray(value) && value[0]) headers[key.toLowerCase()] = value.join(", ");
+        }
+
+        res.resume();
+        resolve({
+          requestedUrl,
+          finalUrl: parsed.toString(),
+          statusCode: res.statusCode ?? 0,
+          headers,
+        });
+      }
+    );
+
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Tempo esgotado ao consultar a URL da aplicação"));
+    });
+    req.on("error", (err) => {
+      reject(new Error(`Não foi possível acessar a URL: ${err.message}`));
+    });
+    req.end();
+  });
+}
+
 async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
+  const host = (() => {
+    try {
+      return new URL(requestedUrl).hostname;
+    } catch {
+      return "";
+    }
+  })();
+
+  // Local HTTPS (mkcert): Node's global fetch rejects self-signed certs, and
+  // `undici` may be unavailable under pnpm — use node:https with trust disabled.
+  if (requestedUrl.startsWith("https:") && isLocalHostname(host)) {
+    return fetchOnceWithNodeHttp(requestedUrl, FETCH_TIMEOUT_MS);
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -128,6 +263,9 @@ async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       throw new Error("Tempo esgotado ao consultar a URL da aplicação");
+    }
+    if (isLocalHostname(host)) {
+      return fetchOnceWithNodeHttp(requestedUrl, FETCH_TIMEOUT_MS);
     }
     throw new Error(
       err instanceof Error
@@ -176,7 +314,14 @@ function assessSingleItem(
 
   switch (code) {
     case "DATA-01": {
-      if (isHttps) {
+      const requestedHttps = (() => {
+        try {
+          return new URL(snapshot.requestedUrl).protocol === "https:";
+        } catch {
+          return false;
+        }
+      })();
+      if (isHttps || requestedHttps) {
         return withHttpArtifacts(code, snapshot, {
           compliance: "conforme",
           confidence: 98,

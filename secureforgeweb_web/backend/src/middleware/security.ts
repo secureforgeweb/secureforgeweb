@@ -9,8 +9,11 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import type { Application, Request, Response, NextFunction } from "express";
 
 const isProduction = process.env.NODE_ENV === "production";
-/** Demo/local HTTPS: set ENABLE_SECURE_HEADERS=1 to turn on CSP+HSTS without full production mode. */
-const enableSecureHeaders = isProduction || process.env.ENABLE_SECURE_HEADERS === "1";
+/** Demo/local HTTPS: ENABLE_SECURE_HEADERS=1, or auto when TLS cert paths are set. */
+const enableSecureHeaders =
+  isProduction ||
+  process.env.ENABLE_SECURE_HEADERS === "1" ||
+  Boolean(process.env.HTTPS_CERT?.trim() && process.env.HTTPS_KEY?.trim());
 
 // ─── 6.7 Helmet ───────────────────────────────────────────────────────────────
 // Removes X-Powered-By, sets X-Content-Type-Options: nosniff,

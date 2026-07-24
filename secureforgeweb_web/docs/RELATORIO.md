@@ -381,6 +381,8 @@ flowchart LR
 
 ### 9.1 Execução local
 
+**Windows — Corepack / pnpm:** `corepack enable` exige PowerShell/CMD **como Administrador** (erro *Access is denied* / *EPERM* sem elevação). Alternativas: `npm install -g pnpm` ou o instalador em https://get.pnpm.io. Detalhes: [`readme-web.md`](../readme-web.md).
+
 ```powershell
 cd secureforgeweb_web
 pnpm install
@@ -425,12 +427,23 @@ pnpm dev
 | `findings.test.ts` | 9 |
 | `dashboard.test.ts` | 7 |
 | `reports.test.ts` | 4 |
-| `checklistAssessor.test.ts` | 9 |
-| `gitRepoAssessor.test.ts` | 6 |
-| `aiChecklistAssessor.test.ts` | 8 |
+| `checklistAssessor.test.ts` | 10 |
+| `gitRepoAssessor.test.ts` | 7 |
+| `aiChecklistAssessor.test.ts` | 9 |
 | `asvsPtCatalog.test.ts` | merge PT ASVS |
 | `aiAssistantConfig.test.ts` | 5 |
 | `security.test.ts` | 34 |
+
+### 9.5 Resultados experimentais (Checklist Essential v1.0)
+
+| Alvo | Data | Score | Achados | C/A/M/B |
+|---|---|---|---|---|
+| OWASP Juice Shop | 15/07/2026 | 13% | 21 | 5/10/5/1 |
+| SecureForge — baseline HTTP `:5173` | 22–23/07/2026 | 29% | 17 | 3/8/5/1 |
+| SecureForge — demo TLS `https://:5173` | 23/07/2026 | 42% | 14 | 3/6/4/1 |
+| SecureForge — pós-hardening `https://:3000` + Git | 24/07/2026 | **100%** | 0 | 0/0/0/0 |
+
+Remediação dos críticos/altos do relatório TLS (SECRET-01/02, DATA-01, AUTHZ-02, INPUT-03, HEADER-01/02, EXPOS-01, DATA-02): headers Helmet/Vite, redação de logs, `escapeHtml`, preservação de evidências HTTP/Git frente ao LLM, e URL de análise na API HTTPS. Pacote Overleaf: `docs/overleaf-artigo/`.
 
 ---
 

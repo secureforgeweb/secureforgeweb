@@ -154,7 +154,8 @@ describe("checklistAssessor — fetchHttpSecuritySnapshot", () => {
       })
     );
 
-    const snapshot = await fetchHttpSecuritySnapshot("https://localhost:5173");
+    // Non-loopback host so the unit test uses mocked fetch (local HTTPS uses node:https).
+    const snapshot = await fetchHttpSecuritySnapshot("https://vite.test:5173");
     expect(snapshot.headers["content-security-policy"]).toBe("default-src 'self'");
     expect(snapshot.headers["strict-transport-security"]).toContain("max-age");
     expect(snapshot.headers["x-content-type-options"]).toBe("nosniff");
