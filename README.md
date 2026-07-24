@@ -78,23 +78,12 @@ Contexto acadêmico: trilha integradora **AppHardener** (segurança aplicada / h
 
 | Camada | Responsabilidade |
 |--------|------------------|
-| **Browser** | SPA React 19 (Vite 7), TanStack Query, cliente tRPC, wouter |
+| **Navegador** | SPA React 19 (Vite 7), TanStack Query, cliente tRPC, wouter |
 | **Node (Express)** | API HTTP, tRPC, geração de PDF, assessores HTTP/Git/LLM (in-process) |
 | **PostgreSQL** | Persistência via Drizzle ORM |
-| **Externos** | Alvos HTTP/Git sob avaliação; APIs de LLM opcionais |
+| **Externos** | Alvos HTTP/Git, LLMs opcionais, catálogo ASVS, e-mail e integrações opcionais |
 
-```mermaid
-flowchart LR
-  subgraph browser[BROWSER React SPA :5173]
-    UI[SecureForge UI]
-  end
-  subgraph node[Node Express API :3000]
-    API[tRPC + REST]
-  end
-  DB[(PostgreSQL)]
-  UI --> API
-  API --> DB
-```
+![Arquitetura do SecureForge Web](secureforgeweb_web/docs/screenshots/arquitetura.png)
 
 **Execução:** em desenvolvimento, API na porta `:3000` e Vite na `:5173` (com proxy). Em produção: `pnpm build` e depois `pnpm start`.
 

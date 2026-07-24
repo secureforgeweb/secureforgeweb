@@ -6,7 +6,7 @@
 |---|---|---|
 | [MANUAL.md](MANUAL.md) | Usuários / revisores | Manual de uso (fluxo completo + admin) |
 | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Acadêmico / técnico | Arquitetura alvo e requisitos |
-| [screenshots/](screenshots/) | Todos | Capturas de tela da interface |
+| [screenshots/](screenshots/) | Todos | Capturas de tela da interface (inclui [arquitetura.png](screenshots/arquitetura.png)) |
 | Este `README.md` | Todos | Índice e links oficiais |
 
 ## Demonstração e vídeos (SBSeg / Salão de Ferramentas)
