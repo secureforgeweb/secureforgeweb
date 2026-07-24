@@ -102,14 +102,15 @@ pnpm db:setup
 
 ## Documentação
 
-Ficheiros em **`docs/`**:
+Ficheiros em **`docs/`** e links oficiais:
 
-| Documento | Público |
-|-----------|---------|
+| Recurso | Conteúdo |
+|---------|----------|
 | [`docs/MANUAL.md`](docs/MANUAL.md) | Utilizadores — fluxo completo |
 | [`docs/PROJETO_ARQUITETURAL.md`](docs/PROJETO_ARQUITETURAL.md) | Arquitetura alvo |
-| [`docs/README.md`](docs/README.md) | Índice + screenshots |
+| [`docs/README.md`](docs/README.md) | Índice + screenshots + vídeos |
 | [`docs/screenshots/`](docs/screenshots/) | Capturas de ecrã |
+| [Vídeos de demonstração (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e funcionalidades (SBSeg SF) |
 
 README internacional (inglês) na **raiz do repositório**: [`../README.md`](../README.md).
 

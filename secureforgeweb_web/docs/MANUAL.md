@@ -2,7 +2,12 @@
 
 Plataforma de diagnóstico e hardening de aplicações web (AppHardener).
 
-Documentação da entrega atual: [RELATORIO.md](RELATORIO.md)
+| Recurso | Link |
+|---|---|
+| Repositório | [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
+| Índice da documentação | [README.md](README.md) |
+| Vídeos de demonstração | [Google Drive](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) |
+| Arquitetura | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) |
 
 ---
 

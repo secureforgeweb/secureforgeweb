@@ -1,114 +1,87 @@
-# **SecureForge Web — Web application for OWASP-oriented posture assessment and hardening**
+# SecureForge Web
 
-**SecureForge Web** is a **full-stack web system** (React + Node) for **registering web applications**, running **OWASP-aligned checklist assessments**, **automated evidence collection** (HTTP headers, Git repository signals, optional per-user LLM assistance), **findings management**, **dashboards**, and **PDF export**. It targets the **AppHardener** integrator track (applied security): operators work through a browser UI backed by REST/tRPC APIs and PostgreSQL persistence.
+**Web platform for OWASP-oriented security posture assessment and guided hardening.**
 
-**Repository:** [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb)
+Register web applications, run checklist assessments, collect automated evidence (HTTP headers, Git repository signals, optional per-user LLM), manage findings, track posture over time, and export PDF reports.
 
-## Abstract
+| Resource | Link |
+|----------|------|
+| **Source code** | [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
+| **Demo videos** | [Google Drive — demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) |
+| **User manual (PT)** | [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) |
+| **Architecture (PT)** | [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) |
+| **Screenshots** | [`secureforgeweb_web/docs/screenshots/`](secureforgeweb_web/docs/screenshots/) |
+| **Ops guide (PT)** | [`secureforgeweb_web/readme-web.md`](secureforgeweb_web/readme-web.md) |
+| **License** | [MIT](LICENSE) |
 
-SecureForge Web supports security analysts and developers who need a **repeatable, demonstrable hardening workflow** for web applications. The application provides **multi-user accounts**, **bilingual UI (Portuguese / English)**, **per-user AI assistant configuration**, **multiple checklist catalogs** (Essential 24-item v1.0 and **OWASP ASVS 5.0** Level 1 / Complete), an **admin global view** of analyses with comparative charts, partial-save wizard navigation, resizable admin tables, and **Entrega 3+** consolidated end-to-end flow (registration → analysis → findings → dashboard → PDF). The codebase is a **monorepo slice**: `secureforgeweb_web/` holds the pnpm package (frontend + backend; dual-port dev: API `:3000`, Vite `:5173`).
+**SBSeg 2026 — Salão de Ferramentas:** modality **Código Aberto** (public source + documentation + technical video). Call: [sbseg2026.uff.br/chamadas/sf](https://www.sbseg2026.uff.br/chamadas/sf/).
 
 ---
 
 ## Table of contents
 
-* [1. README organization](#1-readme-organization)
-  * [1.1 Document structure](#11-document-structure)
-  * [1.2 Contents of this repository](#12-contents-of-this-repository)
-  * [1.3 Repository layout](#13-repository-layout)
-* [2. Project context](#2-project-context)
-* [3. Basic information](#3-basic-information)
-  * [3.1 Introduction](#31-introduction)
-  * [3.2 Main capabilities](#32-main-capabilities)
-  * [3.3 Architecture](#33-architecture)
-  * [3.4 How the stack is run](#34-how-the-stack-is-run)
-  * [3.5 Recommended environment](#35-recommended-environment)
-* [4. Dependencies](#4-dependencies)
-* [5. Security concerns](#5-security-concerns)
-* [6. Installation and running locally](#6-installation-and-running-locally)
-* [7. Minimal test](#7-minimal-test)
-* [8. License](#8-license)
-* [Portuguese documentation](#portuguese-documentation)
+1. [Quick start](#quick-start)
+2. [What it does](#what-it-does)
+3. [Architecture](#architecture)
+4. [Repository layout](#repository-layout)
+5. [Dependencies](#dependencies)
+6. [Security notes](#security-notes)
+7. [Installation](#installation)
+8. [Minimal test](#minimal-test)
+9. [Documentation map](#documentation-map)
+10. [License](#license)
 
 ---
 
-# 1. README organization
+## Quick start
 
-## 1.1 Document structure
-
-1. **README organization** — how this file and the repo are structured.
-2. **Project context** — academic integrator track and scope.
-3. **Basic information** — scope, features, architecture, runtime model.
-4. **Dependencies** — Node, pnpm, PostgreSQL, optional Docker.
-5. **Security concerns** — secrets, auth, untrusted URLs/repos, LLM keys.
-6. **Installation and running locally** — clone, `.env`, database, dev servers.
-7. **Minimal test** — quick validation without a full production setup.
-8. **License** — terms for this repository.
-
-## 1.2 Contents of this repository
-
-* **`secureforgeweb_web/`** — single **pnpm** package: **React (Vite)** SPA + **Express** API (**tRPC**, **Drizzle**, PostgreSQL).
-* **Root metadata** — this `README.md`, minimal root `package.json` (script forwarding), `.gitattributes` (optional LFS for large docs).
-
-Operational detail for developers (routes, env vars, Windows setup) lives in **`secureforgeweb_web/readme-web.md`**. User manuals, delivery reports, and demo scripts are under **`secureforgeweb_web/docs/`** (Portuguese).
-
-## 1.3 Repository layout
-
-```
-secureforgeweb/                      ← repository root
-├── secureforgeweb_web/              ← main web application (pnpm project root)
-│   ├── frontend/                    ← React, Vite, Tailwind, SPA entry
-│   ├── backend/                     ← Express, tRPC, Drizzle, services
-│   ├── docs/                        ← MANUAL, DEMO, delivery reports, BRAND
-│   ├── scripts/                     ← PostgreSQL init, local DB setup (Windows)
-│   ├── package.json                 ← scripts: dev, build, test, db:setup, …
-│   ├── readme-web.md                ← single package README (operations)
-│   ├── docker-compose.yml           ← optional local PostgreSQL 16
-│   └── .env                         ← not version-controlled (copy from .env.example)
-├── package.json                     ← forwards dev/build/test to secureforgeweb_web/
-├── .gitattributes
-└── README.md                        ← this file
+```bash
+git clone https://github.com/secureforgeweb/secureforgeweb.git
+cd secureforgeweb/secureforgeweb_web
+cp .env.example .env   # set DATABASE_URL and JWT_SECRET (≥ 32 chars)
+pnpm install
+pnpm db:setup          # migrate + seed Essential v1.0 + import ASVS 5.0
+pnpm dev
 ```
 
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| API (tRPC) | http://localhost:3000/api/trpc |
+| Health | http://localhost:3000/api/health |
+
+From the repository root you can also run `pnpm dev`, `pnpm build`, `pnpm test`, and `pnpm db:setup` (they forward into `secureforgeweb_web/`).
+
+**pnpm on Windows:** `corepack enable` usually needs an **Administrator** terminal. Alternatives: `npm install -g pnpm` or the [pnpm installer](https://pnpm.io/installation).
+
+Full Portuguese walkthrough (env vars, HTTPS demo, ASVS sync): [`secureforgeweb_web/readme-web.md`](secureforgeweb_web/readme-web.md).
+
 ---
 
-# 2. Project context
-
-| Item | Role |
-|------|------|
-| **AppHardener** | Academic integrator project — web application hardening and posture diagnosis. |
-| **SecureForge Web** (this repo) | **Web platform** for OWASP checklist workflows, automated checks, findings, dashboards, PDF export, and optional per-user LLM assistance. |
-
-> **Note:** When assessing **third-party URLs or Git repositories**, treat targets and fetched content as **untrusted**. Run sensitive assessments in isolated environments; never commit secrets or production credentials.
-
----
-
-# 3. Basic information
-
-## 3.1 Introduction
-
-In development, **Express** serves the API on **`PORT`** (default **3000**) and **Vite** serves the SPA on **5173** with proxy to the API (`VITE_API_PROXY_TARGET`). The browser talks to tRPC at **`/api/trpc`** and REST health at **`/api/health`**.
-
-## 3.2 Main capabilities
+## What it does
 
 * **Applications** — register base URL and/or Git repository; start analyses with checklist selection.
-* **Checklist catalogs** — **Essential SecureForge v1.0** (24 items / 9 categories) plus **OWASP ASVS 5.0** (Level 1 and Complete, ~345 items) imported from the official flat JSON; admin **Sync ASVS** to refresh.
-* **OWASP checklist wizard** — partial save; filters by ASVS level and chapter search (ASVS); HTTP, Git, and AI-assisted evidence per item.
-* **Internationalization (PT / EN)** — language toggle on public and authenticated pages; backend validation and tRPC error messages follow the `x-locale` header.
-* **Findings & dashboard** — posture metrics, charts, exportable PDF.
-* **Per-user AI assistant** — OpenAI, Gemini, Azure, or custom endpoint (`/profile/ai-assistant`); keys stored per user, not in repo `.env`.
-* **Administration** — users, checklist items (searchable table with chapter navigation), **global analyses** with column filters, resizable columns, and comparative benchmark chart.
-* **UX** — collapsible sidebar (`Ctrl+B`), dark/light theme, resizable admin table columns (preferences saved in `localStorage`).
-* **Identity** — local email/password, JWT, RBAC, notifications.
+* **Checklist catalogs** — **Essential SecureForge v1.0** (24 items / 9 categories) plus **OWASP ASVS 5.0** (Level 1 and Complete) imported from the official flat JSON; admin **Sync ASVS** to refresh.
+* **Wizard** — partial save; HTTP, Git, and optional AI-assisted suggestions per item; human confirmation before save.
+* **Findings & dashboard** — severity, priority, posture score, charts, PDF export.
+* **Per-user AI assistant** — OpenAI, Gemini, Azure, or custom endpoint; keys stored per user (not in repo `.env`).
+* **Administration** — users, checklist items, global analyses with filters and comparative charts.
+* **i18n** — Portuguese / English UI; API messages follow `x-locale`.
 
-## 3.3 Architecture
+Academic context: **AppHardener** integrator track (applied security / web hardening).
+
+> When assessing **third-party URLs or Git repositories**, treat targets as **untrusted**. Never commit secrets or production credentials.
+
+---
+
+## Architecture
 
 | Layer | Responsibility |
 |-------|----------------|
-| **Browser** | React 19 SPA (Vite 7), TanStack Query, tRPC client, wouter routes. |
-| **Node (Express)** | HTTP API, tRPC router, PDF generation, optional OAuth hooks, security middleware. |
-| **PostgreSQL** | Persistent state via **Drizzle ORM** (users, applications, analyses, findings, AI config). |
-| **External** | Optional LLM APIs (per-user config), HTTP/Git targets under assessment. |
+| **Browser** | React 19 SPA (Vite 7), TanStack Query, tRPC client, wouter |
+| **Node (Express)** | HTTP API, tRPC, PDF generation, HTTP/Git/LLM assessors (in-process) |
+| **PostgreSQL** | Persistence via Drizzle ORM |
+| **External** | Assessed HTTP/Git targets; optional LLM APIs |
 
 ```mermaid
 flowchart LR
@@ -123,162 +96,104 @@ flowchart LR
   API --> DB
 ```
 
-## 3.4 How the stack is run
-
-1. **Development** — `pnpm dev` (from `secureforgeweb_web/` or repo root) runs backend and frontend concurrently.
-2. **Production** — `pnpm build` then `pnpm start` (API serves built frontend bundle when configured for production).
-
-## 3.5 Recommended environment
-
-| Layer | Suggestion |
-|-------|------------|
-| **Host (dev)** | **Windows 10/11**, **Linux**, or **macOS**; **Node.js 22**; **pnpm** via **Corepack** (on Windows, `corepack enable` needs **Administrator**). |
-| **RAM** | ≥ **8 GB** for comfortable dev. |
-| **Database** | **PostgreSQL 16+** locally, via Docker Compose, or hosted. |
-| **Browser** | Recent **Chrome**, **Edge**, or **Firefox**. |
+**Runtime:** development uses dual ports (API `:3000`, Vite `:5173` with proxy). Production: `pnpm build` then `pnpm start`.
 
 ---
 
-# 4. Dependencies
+## Repository layout
+
+```
+secureforgeweb/
+├── LICENSE                          ← MIT
+├── README.md                        ← this file (EN)
+├── package.json                     ← forwards scripts to secureforgeweb_web/
+└── secureforgeweb_web/              ← main pnpm package
+    ├── frontend/                    ← React / Vite SPA
+    ├── backend/                     ← Express, tRPC, Drizzle, assessors
+    ├── docs/
+    │   ├── MANUAL.md
+    │   ├── PROJETO_ARQUITETURAL.md
+    │   ├── README.md                ← docs index + demo video link
+    │   └── screenshots/
+    ├── scripts/                     ← DB / HTTPS helpers
+    ├── readme-web.md                ← operational README (PT)
+    ├── docker-compose.yml           ← optional PostgreSQL 16
+    └── .env.example
+```
+
+Other files under `docs/` (drafts, Overleaf, local PDFs) are **gitignored** and stay on the authors’ machines only.
+
+---
+
+## Dependencies
 
 | Dependency | Notes |
 |------------|--------|
-| **Git** | Clone and update this repository. |
-| **Node.js** | **22.x** (see `secureforgeweb_web/package.json`). |
-| **Corepack + pnpm** | Enable Corepack, then **`pnpm install`** inside **`secureforgeweb_web/`**. On **Windows**, `corepack enable` usually needs an **Administrator** terminal (see §6). |
-| **PostgreSQL** | Required (`DATABASE_URL`). |
-| **Optional: Docker** | `docker compose up -d` in `secureforgeweb_web/` for local Postgres. |
+| **Git** | Clone this repository |
+| **Node.js 22.x** | See `secureforgeweb_web/package.json` |
+| **pnpm** | Via Corepack or standalone install |
+| **PostgreSQL 16+** | Required (`DATABASE_URL`) |
+| **Docker** (optional) | `docker compose up -d` in `secureforgeweb_web/` |
+
+Recommended: ≥ 8 GB RAM; recent Chrome, Edge, or Firefox.
 
 ---
 
-# 5. Security concerns
+## Security notes
 
-## 5.1 Main risk vectors
+| Vector | Guidance |
+|--------|----------|
+| Untrusted targets | Assessed URLs/repos may be malicious — isolate when needed |
+| Secrets | Never commit `.env`; protect `JWT_SECRET`, DB credentials, LLM keys |
+| AI keys | Per-user in DB / gitignored data paths |
+| Production | Strong `JWT_SECRET` (≥ 32 chars); HTTPS; no default admin creds |
 
-| Vector | Description |
-|--------|-------------|
-| **Untrusted targets** | Assessed URLs/repos may be malicious or expose sensitive data. |
-| **Secrets** | Never commit **`.env`**; keep **`JWT_SECRET`**, DB credentials, and **user LLM keys** out of version control. |
-| **AI configuration** | API keys are **per-user** in the database/files under `backend/data/` (gitignored). |
-| **Auth** | Use strong `JWT_SECRET` (≥ 32 characters); protect admin routes in production. |
+Local HTTPS demo (headers / self-assessment): in `secureforgeweb_web/`, run `pnpm https:setup`, set `VITE_DEV_HTTPS=1`, `ENABLE_SECURE_HEADERS=1`, and cert paths. For HEADER-\* / DATA-01, prefer app URL **`https://localhost:3000`**.
 
-## 5.2 Production-oriented checklist
-
-1. Rotate **`JWT_SECRET`** and database credentials.
-2. Serve behind **HTTPS** (local demo: `pnpm https:setup` in `secureforgeweb_web/`, set `VITE_DEV_HTTPS=1`, `ENABLE_SECURE_HEADERS=1`, and cert paths).
-3. For checklist **HEADER-*** / **DATA-01**, register the app base URL as **`https://localhost:3000`** (API with Helmet) — Vite `:5173` also works; the assessor probes the API automatically.
-4. Restrict network egress if assessments run against untrusted hosts.
-5. Do not expose development OAuth bypass or default admin credentials publicly.
-
-## 5.3 Disclaimer
-
-This software is provided **as-is** for **education and authorised security assessment**. The maintainers are **not liable** for misuse or misconfigured deployments. Third-party LLM providers are subject to **their** terms of use.
+**Disclaimer:** provided as-is for education and authorised assessment. Third-party LLM providers remain under their own terms.
 
 ---
 
-# 6. Installation and running locally
+## Installation
 
-> **Full walkthrough (Portuguese, Windows):** **`secureforgeweb_web/readme-web.md`**.
-
-### 6.0 Install pnpm (Corepack)
-
-Node.js ships with **Corepack**, which manages the `pnpm` version pinned by the project.
-
-**Windows:** `corepack enable` writes shims under the Node install directory and typically **requires an elevated (Administrator) PowerShell or Command Prompt**. Without elevation you may see *Access is denied* / *EPERM*.
-
-```powershell
-# 1) Open PowerShell or CMD "as Administrator"
-# 2) Then:
-corepack enable
-corepack prepare pnpm@latest --activate
-```
-
-Close the admin terminal afterwards and continue in a **normal** shell.
-
-**Alternatives if you cannot use Administrator:**
-
-```powershell
-# Option A — install pnpm via npm (user scope)
-npm install -g pnpm
-
-# Option B — standalone installer (no Corepack)
-iwr https://get.pnpm.io/install.ps1 -useb | iex
-```
-
-**Linux / macOS:** `corepack enable` usually works without root if Node was installed for your user; otherwise use `sudo corepack enable` or the alternatives above.
-
-**Short path** (from repository root, after `pnpm` is available):
-
-```bash
-cd secureforgeweb_web
-```
-
-Copy **`.env.example`** to **`secureforgeweb_web/.env`**, set at least **`DATABASE_URL`** and **`JWT_SECRET`**, then:
-
-```bash
-pnpm install
-pnpm db:setup    # migrate + seed Essential v1.0 + import ASVS 5.0
-pnpm dev
-```
+1. Install **Node.js 22** and enable **pnpm** (see [Quick start](#quick-start)).
+2. Copy `secureforgeweb_web/.env.example` → `secureforgeweb_web/.env`.
+3. Set at least `DATABASE_URL` and `JWT_SECRET`.
+4. From `secureforgeweb_web/`: `pnpm install` → `pnpm db:setup` → `pnpm dev`.
 
 Optional ASVS maintenance:
 
 ```bash
 pnpm db:import-asvs   # first import (L1 + Complete)
-pnpm db:sync-asvs     # refresh from OWASP source (admin UI: Sync ASVS)
+pnpm db:sync-asvs     # refresh from OWASP (also available in admin UI)
 ```
-
-| Service | URL |
-|---------|-----|
-| **Frontend** | http://localhost:5173 |
-| **API (tRPC)** | http://localhost:3000/api/trpc |
-| **Health** | http://localhost:3000/api/health |
-
-**Shortcuts from repository root:**
-
-```bash
-pnpm dev
-pnpm build
-pnpm test
-pnpm check
-pnpm db:setup
-pnpm db:import-asvs
-pnpm db:sync-asvs
-```
-
-Run **`pnpm install`** and **`pnpm db:setup`** from **`secureforgeweb_web/`** the first time.
 
 ---
 
-# 7. Minimal test
-
-After `pnpm install` and a working `.env` + database:
+## Minimal test
 
 ```bash
 cd secureforgeweb_web
 pnpm check
 pnpm test
+# optional: pnpm build
 ```
 
-Optionally run **`pnpm build`** to validate a production build.
+---
+
+## Documentation map
+
+| Document | Language | Purpose |
+|----------|----------|---------|
+| This `README.md` | EN | Public project entry for GitHub / SBSeg reviewers |
+| [`secureforgeweb_web/readme-web.md`](secureforgeweb_web/readme-web.md) | PT | Env, scripts, Windows/HTTPS ops |
+| [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) | PT | End-user manual |
+| [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) | PT | Architecture & requirements |
+| [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | PT | Docs index + **demo video Drive folder** |
+| [Demo videos (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | — | Installation and feature walkthrough videos |
 
 ---
 
-# 8. License
+## License
 
-The application package in **`secureforgeweb_web/`** is licensed under the **MIT License** (see `secureforgeweb_web/package.json`). Dependencies remain under their respective licenses.
-
----
-
-## Portuguese documentation
-
-This README stays in **English** for international sharing. **Full guides in Portuguese** are maintained inside **`secureforgeweb_web/`**:
-
-| Document | Purpose |
-|----------|---------|
-| [`secureforgeweb_web/readme-web.md`](secureforgeweb_web/readme-web.md) | Operational README — stack, env, local setup, scripts. |
-| [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) | End-user manual. |
-| [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) | Target architecture and requirements. |
-| [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | Documentation index (+ `screenshots/`). |
-
-Prefer updating the files above when operational details change.
+[MIT](LICENSE) — see also `license` in `secureforgeweb_web/package.json`. Dependencies remain under their respective licenses.
