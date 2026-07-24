@@ -7,7 +7,8 @@ Plataforma de diagnóstico e hardening de aplicações web (AppHardener).
 | Repositório | [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
 | Índice da documentação | [README.md](README.md) |
 | Vídeos de demonstração | [Google Drive](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) |
-| Arquitetura | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) |
+| Arquitetura (texto) | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) |
+| Diagrama de arquitetura | [screenshots/arquitetura.png](screenshots/arquitetura.png) |
 
 ---
 

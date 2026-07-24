@@ -5,7 +5,7 @@
 **Versão:** 1.3  
 **Data:** 07/07/2026
 
-> Para o **estado operacional atual**, consulte [MANUAL.md](MANUAL.md), o [índice da documentação](README.md) e os [vídeos de demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
+> Para o **estado operacional atual**, consulte [MANUAL.md](MANUAL.md), o [índice da documentação](README.md), o [diagrama de arquitetura](screenshots/arquitetura.png) e os [vídeos de demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link). Este documento descreve a arquitetura alvo e requisitos; a implementação evoluiu com IA por usuário, admin benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
 
 ---
 
@@ -70,6 +70,8 @@ Desenvolver um protótipo funcional que permita:
 ---
 
 ## 2. Visão geral da arquitetura
+
+> **Diagrama oficial (implementação atual):** [screenshots/arquitetura.png](screenshots/arquitetura.png) — fases *Cadastro e entrada*, *Avaliação e evidências* e *Postura e saída*.
 
 ### 2.1 Estilo arquitetural
 

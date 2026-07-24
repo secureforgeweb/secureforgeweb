@@ -109,6 +109,7 @@ Ficheiros em **`docs/`** e links oficiais:
 | [`docs/MANUAL.md`](docs/MANUAL.md) | Utilizadores — fluxo completo |
 | [`docs/PROJETO_ARQUITETURAL.md`](docs/PROJETO_ARQUITETURAL.md) | Arquitetura alvo |
 | [`docs/README.md`](docs/README.md) | Índice + screenshots + vídeos |
+| [`docs/screenshots/arquitetura.png`](docs/screenshots/arquitetura.png) | Diagrama oficial de arquitetura |
 | [`docs/screenshots/`](docs/screenshots/) | Capturas de ecrã |
 | [Vídeos de demonstração (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e funcionalidades (SBSeg SF) |
 

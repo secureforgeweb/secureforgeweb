@@ -76,16 +76,21 @@ Contexto acadêmico: trilha integradora **AppHardener** (segurança aplicada / h
 
 ## Arquitetura
 
-| Camada | Responsabilidade |
-|--------|------------------|
-| **Navegador** | SPA React 19 (Vite 7), TanStack Query, cliente tRPC, wouter |
-| **Node (Express)** | API HTTP, tRPC, geração de PDF, assessores HTTP/Git/LLM (in-process) |
-| **PostgreSQL** | Persistência via Drizzle ORM |
-| **Externos** | Alvos HTTP/Git, LLMs opcionais, catálogo ASVS, e-mail e integrações opcionais |
+Fluxo em três fases (cadastro → avaliação com evidências → postura/saída), alinhado à implementação atual:
 
-![Arquitetura do SecureForge Web](secureforgeweb_web/docs/screenshots/arquitetura.png)
+| Fase | Componentes |
+|------|-------------|
+| **Cadastro e entrada** | Analista (human-in-the-loop), cadastro da app (URL + Git), catálogo Essential 24 / ASVS 5.0 |
+| **Avaliação e evidências** | Wizard, assessores HTTP/Git/IA, motor de evidências, PostgreSQL + Drizzle, integrações outbound |
+| **Postura e saída** | Achados, dashboard de postura, relatório PDF |
+
+![Arquitetura do SecureForge Web — cadastro, avaliação e postura](secureforgeweb_web/docs/screenshots/arquitetura.png)
+
+Figura: diagrama oficial de arquitetura (`docs/screenshots/arquitetura.png`).
 
 **Execução:** em desenvolvimento, API na porta `:3000` e Vite na `:5173` (com proxy). Em produção: `pnpm build` e depois `pnpm start`.
+
+Stack resumida: React 19 · Vite 7 · Express/tRPC · Node 22 · PostgreSQL 16 · Drizzle · Helmet/PDF.
 
 ---
 
@@ -177,7 +182,8 @@ pnpm test
 | Este `README.md` | Entrada pública do projeto (GitHub / revisores SBSeg) |
 | [`secureforgeweb_web/readme-web.md`](secureforgeweb_web/readme-web.md) | Variáveis, scripts, ops Windows/HTTPS |
 | [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) | Manual do usuário |
-| [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) | Arquitetura e requisitos |
+| [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) | Arquitetura e requisitos (texto) |
+| [`secureforgeweb_web/docs/screenshots/arquitetura.png`](secureforgeweb_web/docs/screenshots/arquitetura.png) | **Diagrama oficial de arquitetura** |
 | [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | Índice + pasta Drive dos vídeos |
 | [Vídeos (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e demonstração das funcionalidades |
 
