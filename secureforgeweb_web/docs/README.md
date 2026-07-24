@@ -6,23 +6,27 @@
 |---|---|---|
 | [MANUAL.md](MANUAL.md) | Usuários / revisores | Manual de uso (fluxo completo + admin) |
 | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) | Técnico | Arquitetura, requisitos e stack da SecureForge Web |
+| [PLAYLIST_DEMONSTRACAO.md](PLAYLIST_DEMONSTRACAO.md) | Revisores / demo | **Roteiro da playlist de vídeos** (copiar para o Drive) |
 | [screenshots/arquitetura.png](screenshots/arquitetura.png) | Todos | **Diagrama oficial de arquitetura** (fluxo cadastro → avaliação → postura) |
 | [screenshots/](screenshots/) | Todos | Demais capturas de tela da interface |
 | Este `README.md` | Todos | Índice e links oficiais |
 
 ## Demonstração e vídeos (SBSeg / Salão de Ferramentas)
 
-Vídeos técnicos de instalação, funcionalidades e demonstração da ferramenta:
-
 **[Pasta Google Drive — demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link)**
 
-| Conteúdo esperado na pasta | Descrição |
-|---|---|
-| Instalação | Clone, `.env`, PostgreSQL, `pnpm install` / `pnpm db:setup` / `pnpm dev` |
-| Fluxo ponta a ponta | Cadastro de app → checklist → achados → dashboard → PDF |
-| (Opcional) HTTPS local | Demo de headers / autoavaliação com `pnpm https:setup` |
+Roteiro completo (ordem 01–05, comandos e checklist): **[PLAYLIST_DEMONSTRACAO.md](PLAYLIST_DEMONSTRACAO.md)**.
 
-> Mantenha a pasta **com acesso de leitura para qualquer pessoa com o link** (ou público) para revisores do Salão de Ferramentas.
+| # | Vídeo | Etapa |
+|---|---|---|
+| 01 | Download das ferramentas | Git, Node 22, pnpm, PostgreSQL/Docker |
+| 02 | Instalação e configuração | Instalar e validar as ferramentas |
+| 03 | Git clone | Repositório oficial |
+| 04 | Dependências e config local | `.env`, `pnpm install`, `pnpm db:setup` |
+| 05 | Execução e resultados | `pnpm dev` + ciclo ponta a ponta até PDF |
+| 00 / 06 | *(opcional)* | Visão geral / HTTPS local |
+
+> Copie `PLAYLIST_DEMONSTRACAO.md` para a pasta Drive como README. Mantenha a pasta **com acesso de leitura para qualquer pessoa com o link**.
 
 ## Código e repositório
 

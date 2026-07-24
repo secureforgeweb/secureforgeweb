@@ -8,6 +8,7 @@ Cadastre aplicações web, execute avaliações por checklist, colete evidência
 |---------|------|
 | **Código-fonte** | [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
 | **Vídeos de demonstração** | [Google Drive — demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) |
+| **Playlist (roteiro)** | [`secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md`](secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md) |
 | **Manual do usuário** | [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) |
 | **Projeto arquitetural** | [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) |
 | **Capturas de tela** | [`secureforgeweb_web/docs/screenshots/`](secureforgeweb_web/docs/screenshots/) |
@@ -185,6 +186,7 @@ pnpm test
 | [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) | Arquitetura e requisitos (texto) |
 | [`secureforgeweb_web/docs/screenshots/arquitetura.png`](secureforgeweb_web/docs/screenshots/arquitetura.png) | **Diagrama oficial de arquitetura** |
 | [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | Índice + pasta Drive dos vídeos |
+| [`secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md`](secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md) | Roteiro da playlist (copiar para o Drive) |
 | [Vídeos (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e demonstração das funcionalidades |
 
 ---

@@ -7,6 +7,7 @@ Plataforma de diagnóstico e hardening de aplicações web.
 | Repositório | [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
 | Índice da documentação | [README.md](README.md) |
 | Vídeos de demonstração | [Google Drive](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) |
+| Playlist (roteiro 01–05) | [PLAYLIST_DEMONSTRACAO.md](PLAYLIST_DEMONSTRACAO.md) |
 | Arquitetura (texto) | [PROJETO_ARQUITETURAL.md](PROJETO_ARQUITETURAL.md) |
 | Diagrama de arquitetura | [screenshots/arquitetura.png](screenshots/arquitetura.png) |
 
