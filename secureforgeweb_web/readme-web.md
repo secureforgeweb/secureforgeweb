@@ -112,7 +112,9 @@ Ficheiros em **`docs/`** e links oficiais:
 | [`docs/screenshots/arquitetura.png`](docs/screenshots/arquitetura.png) | Diagrama oficial de arquitetura |
 | [`docs/screenshots/`](docs/screenshots/) | Capturas de ecrã |
 | [Vídeos de demonstração (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e funcionalidades (SBSeg SF) |
+| [Pacote de instaladores (Drive)](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing) | Git, Node 22, PostgreSQL 18, VS Code (Git LFS não necessário) |
 | [`docs/PLAYLIST_DEMONSTRACAO.md`](docs/PLAYLIST_DEMONSTRACAO.md) | Roteiro da playlist (copiar para o Drive) |
+| [`resultados/`](resultados/) | PDFs de postura do estudo de caso (Essential v1.0, 24/07/2026) |
 
 README do repositório na **raiz**: [`../README.md`](../README.md).
 

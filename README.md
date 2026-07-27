@@ -8,6 +8,7 @@ Cadastre aplicações web, execute avaliações por checklist, colete evidência
 |---------|------|
 | **Código-fonte** | [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb) |
 | **Vídeos de demonstração** | [Google Drive — demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) |
+| **Pacote de instaladores** | [Google Drive — instaladores](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing) |
 | **Playlist (roteiro)** | [`secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md`](secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md) |
 | **Manual do usuário** | [`secureforgeweb_web/docs/MANUAL.md`](secureforgeweb_web/docs/MANUAL.md) |
 | **Projeto arquitetural** | [`secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md`](secureforgeweb_web/docs/PROJETO_ARQUITETURAL.md) |
@@ -110,6 +111,7 @@ secureforgeweb/
     │   ├── PROJETO_ARQUITETURAL.md
     │   ├── README.md                ← índice + link dos vídeos
     │   └── screenshots/
+    ├── resultados/                  ← PDFs de postura do estudo de caso (24/07/2026)
     ├── scripts/                     ← helpers de BD / HTTPS
     ├── readme-web.md                ← README operacional
     ├── docker-compose.yml           ← PostgreSQL 16 opcional
@@ -127,10 +129,28 @@ Outros ficheiros em `docs/` (rascunhos, Overleaf, PDFs locais) estão no **`.git
 | **Git** | Clonar este repositório |
 | **Node.js 22.x** | Ver `secureforgeweb_web/package.json` |
 | **pnpm** | Via Corepack ou instalação standalone |
-| **PostgreSQL 16+** | Obrigatório (`DATABASE_URL`) |
+| **PostgreSQL 16+** | Obrigatório (`DATABASE_URL`); o pacote Drive inclui EDB **18** (compatível) |
 | **Docker** (opcional) | `docker compose up -d` em `secureforgeweb_web/` |
+| **VS Code** (opcional) | Editor recomendado na playlist |
+| **Git LFS** | **Não** é necessário para a SecureForge Web (pode ignorar no pacote Drive) |
 
 Recomendado: ≥ 8 GB de RAM; Chrome, Edge ou Firefox recentes.
+
+### Pacote de instaladores (Google Drive)
+
+Espelho dos instaladores oficiais para montar o ambiente no Windows com mais rapidez. Prefira sempre os sites oficiais quando possível.
+
+**Pasta:** [instaladores](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing)
+
+| # | Arquivo (Drive) | O que é | Obrigatório? |
+|---|-----------------|---------|--------------|
+| 1 | `Git-2.55.0.3-64-bit.exe` | Git for Windows | Sim |
+| 2 | `node-v22.23.1-x64.msi` | Node.js 22 LTS (+ Corepack → pnpm) | Sim |
+| 3 | `postgresql-18.4-2-windows-x64.exe` | PostgreSQL (EDB 18) | Sim *ou* Docker |
+| 4 | `VSCodeUserSetup-x64-1.130.0.exe` | Visual Studio Code | Opcional |
+| 5 | `git-lfs-windows-v3.7.1.exe` | Git LFS | **Não** (não usado por este projeto) |
+
+Ordem sugerida: Git → Node.js 22 → PostgreSQL (ou Docker) → (opcional) VS Code → clone + `pnpm` (ver [Instalação](#instalação) e a [playlist](secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md)).
 
 ---
 
@@ -151,10 +171,11 @@ Demo HTTPS local (headers / autoavaliação): em `secureforgeweb_web/`, execute 
 
 ## Instalação
 
-1. Instale o **Node.js 22** e ative o **pnpm** (ver [Arranque rápido](#arranque-rápido)).
-2. Copie `secureforgeweb_web/.env.example` → `secureforgeweb_web/.env`.
-3. Defina pelo menos `DATABASE_URL` e `JWT_SECRET`.
-4. Em `secureforgeweb_web/`: `pnpm install` → `pnpm db:setup` → `pnpm dev`.
+1. Instale **Git**, **Node.js 22** e **PostgreSQL 16+** (ou Docker) — pelos [sites oficiais](#dependências) ou pelo [pacote Drive de instaladores](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing).
+2. Ative o **pnpm** (`corepack enable` / `corepack prepare pnpm@latest --activate`; ver [Arranque rápido](#arranque-rápido)).
+3. Copie `secureforgeweb_web/.env.example` → `secureforgeweb_web/.env`.
+4. Defina pelo menos `DATABASE_URL` e `JWT_SECRET`.
+5. Em `secureforgeweb_web/`: `pnpm install` → `pnpm db:setup` → `pnpm dev`.
 
 Manutenção opcional do ASVS:
 
@@ -187,7 +208,9 @@ pnpm test
 | [`secureforgeweb_web/docs/screenshots/arquitetura.png`](secureforgeweb_web/docs/screenshots/arquitetura.png) | **Diagrama oficial de arquitetura** |
 | [`secureforgeweb_web/docs/README.md`](secureforgeweb_web/docs/README.md) | Índice + pasta Drive dos vídeos |
 | [`secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md`](secureforgeweb_web/docs/PLAYLIST_DEMONSTRACAO.md) | Roteiro da playlist (copiar para o Drive) |
+| [`secureforgeweb_web/resultados/`](secureforgeweb_web/resultados/) | PDFs de postura do estudo de caso (Essential v1.0, 24/07/2026) |
 | [Vídeos (Drive)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) | Instalação e demonstração das funcionalidades |
+| [Instaladores (Drive)](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing) | Git, Node 22, PostgreSQL 18, VS Code (opcional) |
 
 ---
 

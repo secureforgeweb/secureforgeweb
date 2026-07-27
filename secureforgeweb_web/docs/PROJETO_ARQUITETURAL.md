@@ -5,7 +5,7 @@
 **Versão do documento:** 1.4  
 **Data:** 24/07/2026
 
-> Para o **estado operacional atual**, consulte [MANUAL.md](MANUAL.md), o [índice da documentação](README.md), o [diagrama de arquitetura](screenshots/arquitetura.png) e os [vídeos de demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link). Este documento descreve a arquitetura e os requisitos da plataforma; a implementação inclui IA por usuário, visão administrativa com benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
+> Para o **estado operacional atual**, consulte [MANUAL.md](MANUAL.md), o [índice da documentação](README.md), o [diagrama de arquitetura](screenshots/arquitetura.png), os [vídeos de demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) e o [pacote de instaladores](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing). Este documento descreve a arquitetura e os requisitos da plataforma; a implementação inclui IA por usuário, visão administrativa com benchmark, **catálogo ASVS 5.0**, **i18n PT/EN** e migrações `0015`–`0019`.
 
 ---
 

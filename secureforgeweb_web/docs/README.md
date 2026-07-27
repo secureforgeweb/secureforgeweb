@@ -9,24 +9,26 @@
 | [PLAYLIST_DEMONSTRACAO.md](PLAYLIST_DEMONSTRACAO.md) | Revisores / demo | **Roteiro da playlist de vídeos** (copiar para o Drive) |
 | [screenshots/arquitetura.png](screenshots/arquitetura.png) | Todos | **Diagrama oficial de arquitetura** (fluxo cadastro → avaliação → postura) |
 | [screenshots/](screenshots/) | Todos | Demais capturas de tela da interface |
+| [`../resultados/`](../resultados/) | Revisores | PDFs de postura do estudo de caso (Essential v1.0, 24/07/2026) |
 | Este `README.md` | Todos | Índice e links oficiais |
 
 ## Demonstração e vídeos (SBSeg / Salão de Ferramentas)
 
-**[Pasta Google Drive — demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link)**
+**[Pasta Google Drive — demonstração (vídeos)](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link)**  
+**[Pasta Google Drive — instaladores](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing)** (Git, Node 22, PostgreSQL 18, VS Code opcional; **não** use Git LFS neste projeto)
 
 Roteiro completo (ordem 01–05, comandos e checklist): **[PLAYLIST_DEMONSTRACAO.md](PLAYLIST_DEMONSTRACAO.md)**.
 
 | # | Vídeo | Etapa |
 |---|---|---|
-| 01 | Download das ferramentas | Git, Node 22, pnpm, PostgreSQL/Docker |
-| 02 | Instalação e configuração | Instalar e validar as ferramentas |
+| 01 | Download das ferramentas | Pasta instaladores Drive e/ou sites oficiais |
+| 02 | Instalação e configuração | Instalar e validar Git, Node, pnpm, PostgreSQL |
 | 03 | Git clone | Repositório oficial |
 | 04 | Dependências e config local | `.env`, `pnpm install`, `pnpm db:setup` |
 | 05 | Execução e resultados | `pnpm dev` + ciclo ponta a ponta até PDF |
 | 00 / 06 | *(opcional)* | Visão geral / HTTPS local |
 
-> Copie `PLAYLIST_DEMONSTRACAO.md` para a pasta Drive como README. Mantenha a pasta **com acesso de leitura para qualquer pessoa com o link**.
+> Copie `PLAYLIST_DEMONSTRACAO.md` para a pasta Drive dos **vídeos** como README. Mantenha as pastas **com acesso de leitura para qualquer pessoa com o link**.
 
 ## Código e repositório
 
