@@ -152,7 +152,6 @@ Figura: diagrama oficial de arquitetura (`secureforgeweb_web/docs/screenshots/ar
 | **PostgreSQL** | **16+** (playlist: instalador EDB **18**) |
 | **Visual Studio Code** | Editor opcional |
 | **Docker** | Opcional — `docker compose up -d` em `secureforgeweb_web/` |
-| **Git LFS** | **Não** necessário neste projeto |
 
 ### Pacote de instaladores (Google Drive)
 
@@ -166,7 +165,6 @@ Espelho dos instaladores oficiais para Windows. Prefira as páginas oficiais qua
 | 2 | `node-v22.23.1-x64.msi` | Node.js 22 LTS (+ Corepack → pnpm) | Sim |
 | 3 | `postgresql-18.4-2-windows-x64.exe` | PostgreSQL (EDB 18) | Sim *ou* Docker |
 | 4 | `VSCodeUserSetup-x64-1.130.0.exe` | Visual Studio Code | Opcional |
-| 5 | `git-lfs-windows-v3.7.1.exe` | Git LFS | **Não** (não usado por este projeto) |
 
 #### Sequência correta de instalação
 
