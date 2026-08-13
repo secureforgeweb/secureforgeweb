@@ -22,3 +22,7 @@ Estes PDFs correspondem às métricas da avaliação experimental (scores, achad
 
 Protocolo de reprodução (alvos, consenso, hardening 63%→75%, limitações):
 [`PROTOCOLO_ESTUDO.md`](PROTOCOLO_ESTUDO.md).
+
+Matriz 24×12 (C / NA / NC):
+[`MATRIZ_ESSENTIAL_2026-07-24.md`](MATRIZ_ESSENTIAL_2026-07-24.md) ·
+[`matriz-essential-2026-07-24.csv`](matriz-essential-2026-07-24.csv).

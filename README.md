@@ -367,7 +367,9 @@ Os PDFs exportados pela ferramenta estão em [`secureforgeweb_web/resultados/`](
 
 C/A/M/B = crítica / alta / média / baixa.
 
-**Fórmula do score (plataforma):** `(conforme + N/A) / 24`. Itens N/A contam como positivos (mesma regra do dashboard/PDF). Os PDFs listam os **achados** (itens em plano de ação). Os restantes itens até 24 foram **conforme ou N/A**; a **contagem N/A por alvo não foi arquivada** no estudo — não é possível separar conforme vs N/A só a partir dos PDFs.
+**Fórmula do score (plataforma):** `(conforme + N/A) / 24`. Itens N/A contam como positivos (mesma regra do dashboard/PDF).
+
+**Matriz item-a-item (24×12):** [`resultados/MATRIZ_ESSENTIAL_2026-07-24.md`](secureforgeweb_web/resultados/MATRIZ_ESSENTIAL_2026-07-24.md) e CSV [`matriz-essential-2026-07-24.csv`](secureforgeweb_web/resultados/matriz-essential-2026-07-24.csv). **NC** vem dos PDFs; **C/NA** nos restantes itens foi reconstruída pelos autores (regras no ficheiro da matriz), com contagem N/A por alvo e validação do score.
 
 ### Preparação dos alvos (URLs / fontes)
 
@@ -387,8 +389,7 @@ C/A/M/B = crítica / alta / média / baixa.
 4. O LLM (`gpt-4o-mini`, opcional) **sugere**; **não** substitui o consenso humano.
 5. Após consenso: concluir análise → gerar achados → exportar PDF (artefacto público por alvo).
 
-As fichas item-a-item e o log de divergências **não estão versionados**; a evidência pública por alvo é o PDF em `resultados/`.
-
+A matriz pública C/NA/NC por item e alvo está em [`MATRIZ_ESSENTIAL_2026-07-24.md`](secureforgeweb_web/resultados/MATRIZ_ESSENTIAL_2026-07-24.md) (NC dos PDFs; C/NA reconstruídos). As fichas manuscritas originais do dia 24/07 **não** estão versionadas.
 ### Checklist Essential SecureForge v1.0 ↔ OWASP ASVS 5.0
 
 Perfil de 24 itens / 9 categorias usado no estudo. Cada item aponta para **um** requisito ASVS 5.0.0 no formato canónico `v5.0.0-X.Y.Z` (o catálogo completo ASVS L1/Complete também está na ferramenta).

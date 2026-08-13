@@ -55,9 +55,16 @@ No export PDF destes alvos **não há campo URL**. Foram avaliados como instânc
 
 > **Honestidade metodológica:** não é possível garantir bit-a-bit os mesmos scores sem a mesma build/porta/configuração do dia 24/07/2026. O Selo R aqui cobre: **mesmo checklist, mesmo fluxo HITL, mesmos PDFs de referência e ordenação qualitativa** (labs ≤ demos ≤ autoavaliação endurecida).
 
-## 4. Mapeamento PDF ↔ tabela
+## 4. Mapeamento PDF ↔ tabela e matriz 24×12
 
-Ver `README.md` nesta pasta. Cada PDF lista os **achados (itens não conformes / em aberto no plano de ação)**. Os restantes itens do Essential (até 24) foram **conforme ou N/A**; o estudo **não arquivou a contagem N/A por alvo**, logo não se reconstruí conforme vs N/A só a partir do PDF.
+Ver `README.md` nesta pasta. Cada PDF lista os **achados (NC)**.
+
+A classificação completa dos 24 itens por alvo está em:
+
+- [`MATRIZ_ESSENTIAL_2026-07-24.md`](MATRIZ_ESSENTIAL_2026-07-24.md) — matriz + contagens C / NA / NC
+- [`matriz-essential-2026-07-24.csv`](matriz-essential-2026-07-24.csv) — mesma matriz em CSV
+
+**NC** = autoritativo (PDF). **C** / **NA** = reconstrução dos autores (2026-08-13) nos itens sem achado, com regras documentadas na matriz; SecureForge (white-box) sem NA. Scores validados: `(C+NA)/24`.
 
 ## 5. Consenso entre dois analistas
 
@@ -101,7 +108,8 @@ Avaliar a SecureForge local em `https://localhost:5173` (ou `http://localhost:51
 
 | Permite | Não permite (sem dados adicionais) |
 |---------|-------------------------------------|
-| Repetir o fluxo ponta a ponta na ferramenta | Recuperar matriz 24×12 item-a-item original |
-| Comparar PDFs novos com os 12 de referência | Contagem exata de N/A por alvo |
-| Reproduzir demos públicas e labs via fontes oficiais | Versões/portas bit-exact dos labs do dia 24/07 |
-| Reproduzir o *delta* qualitative 63%→75% (3 achados a menos) | Garantir o mesmo score absoluto em demos que mudam online |
+| Repetir o fluxo ponta a ponta na ferramenta | Bit-exact das builds/portas dos labs do dia 24/07 |
+| Comparar PDFs novos com os 12 de referência | Fichas manuscritas / log de divergências originais |
+| Consultar matriz C/NA/NC (NC dos PDFs; C/NA reconstruídos) | Garantir o mesmo score absoluto em demos online que mudam |
+| Reproduzir demos/labs via fontes oficiais | — |
+| Reproduzir o *delta* 63%→75% (3 achados a menos) | — |
