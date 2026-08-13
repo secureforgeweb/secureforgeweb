@@ -7,6 +7,7 @@ import {
 } from "./assessmentEvidence.js";
 import https from "node:https";
 import http from "node:http";
+import { assertResolvedAssessmentTarget } from "./ssrfGuard.js";
 
 export type { AssessmentEvidenceArtifact };
 
@@ -41,6 +42,7 @@ export type HttpSecuritySnapshot = {
 
 const ASSESSOR_USER_AGENT = "SecureForge-Web-Assessor/1.0";
 const FETCH_TIMEOUT_MS = 12_000;
+const MAX_REDIRECTS = 3;
 
 function headerValue(headers: Record<string, string>, name: string): string | undefined {
   return headers[name.toLowerCase()];
@@ -151,8 +153,13 @@ function preferIpv4Localhost(url: string): string {
   return url;
 }
 
-function fetchOnceWithNodeHttp(requestedUrl: string, timeoutMs: number): Promise<HttpSecuritySnapshot> {
+function fetchOnceWithNodeHttp(
+  requestedUrl: string,
+  timeoutMs: number,
+  hops = 0
+): Promise<HttpSecuritySnapshot> {
   return new Promise((resolve, reject) => {
+    void assertResolvedAssessmentTarget(requestedUrl).then(() => {
     let parsed: URL;
     try {
       parsed = new URL(preferIpv4Localhost(requestedUrl));
@@ -178,7 +185,6 @@ function fetchOnceWithNodeHttp(requestedUrl: string, timeoutMs: number): Promise
         servername: originalHost === "127.0.0.1" ? "localhost" : originalHost,
       },
       (res) => {
-        // Follow one redirect (common for trailing slash / http→https).
         const location = res.headers.location;
         if (
           res.statusCode &&
@@ -188,8 +194,12 @@ function fetchOnceWithNodeHttp(requestedUrl: string, timeoutMs: number): Promise
           location.length > 0
         ) {
           res.resume();
+          if (hops >= MAX_REDIRECTS) {
+            reject(new Error("Demasiados redirecionamentos ao consultar a URL"));
+            return;
+          }
           const next = new URL(location, parsed).toString();
-          fetchOnceWithNodeHttp(next, timeoutMs).then(resolve, reject);
+          fetchOnceWithNodeHttp(next, timeoutMs, hops + 1).then(resolve, reject);
           return;
         }
 
@@ -217,10 +227,13 @@ function fetchOnceWithNodeHttp(requestedUrl: string, timeoutMs: number): Promise
       reject(new Error(`Não foi possível acessar a URL: ${err.message}`));
     });
     req.end();
+    }).catch(reject);
   });
 }
 
-async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
+async function fetchOnce(requestedUrl: string, hops = 0): Promise<HttpSecuritySnapshot> {
+  await assertResolvedAssessmentTarget(requestedUrl);
+
   const host = (() => {
     try {
       return new URL(requestedUrl).hostname;
@@ -232,7 +245,7 @@ async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
   // Local HTTPS (mkcert): Node's global fetch rejects self-signed certs, and
   // `undici` may be unavailable under pnpm — use node:https with trust disabled.
   if (requestedUrl.startsWith("https:") && isLocalHostname(host)) {
-    return fetchOnceWithNodeHttp(requestedUrl, FETCH_TIMEOUT_MS);
+    return fetchOnceWithNodeHttp(requestedUrl, FETCH_TIMEOUT_MS, hops);
   }
 
   const controller = new AbortController();
@@ -241,13 +254,22 @@ async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
   try {
     const response = await fetch(requestedUrl, {
       method: "GET",
-      redirect: "follow",
+      redirect: "manual",
       signal: controller.signal,
       headers: {
         "User-Agent": ASSESSOR_USER_AGENT,
         Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
       },
     });
+
+    const location = response.headers.get("location");
+    if (response.status >= 300 && response.status < 400 && location) {
+      if (hops >= MAX_REDIRECTS) {
+        throw new Error("Demasiados redirecionamentos ao consultar a URL");
+      }
+      const next = new URL(location, requestedUrl).toString();
+      return fetchOnce(next, hops + 1);
+    }
 
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
@@ -261,11 +283,17 @@ async function fetchOnce(requestedUrl: string): Promise<HttpSecuritySnapshot> {
       headers,
     };
   } catch (err) {
+    if (err instanceof Error && err.message.includes("Destino bloqueado")) {
+      throw err;
+    }
+    if (err instanceof Error && err.message.includes("Demasiados redirecionamentos")) {
+      throw err;
+    }
     if (err instanceof Error && err.name === "AbortError") {
       throw new Error("Tempo esgotado ao consultar a URL da aplicação");
     }
     if (isLocalHostname(host)) {
-      return fetchOnceWithNodeHttp(requestedUrl, FETCH_TIMEOUT_MS);
+      return fetchOnceWithNodeHttp(requestedUrl, FETCH_TIMEOUT_MS, hops);
     }
     throw new Error(
       err instanceof Error

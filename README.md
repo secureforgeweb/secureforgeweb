@@ -190,6 +190,7 @@ Espelho dos instaladores oficiais para Windows. Prefira as páginas oficiais qua
 | Risco | Descrição |
 |-------|-----------|
 | **Alvos não confiáveis** | URLs/repos avaliados podem ser maliciosos — isole quando necessário. |
+| **SSRF (módulo HTTP)** | A ferramenta faz GET no servidor à URL cadastrada. Destinos privados (RFC1918), link-local e metadados de nuvem (`169.254.169.254`) são **bloqueados** após validação da URL e da resolução DNS; redirecionamentos são revalidados (máx. 3 hops). Loopback (`localhost` / `127.0.0.1`) permanece permitido para labs locais. Para avaliar alvos em LAN, defina `ALLOW_PRIVATE_ASSESSMENT=1`. |
 | **Segredos** | Nunca versionar `.env`; proteger `JWT_SECRET`, `DATABASE_URL` e chaves de LLM. |
 | **Chaves de IA** | Configuradas por usuário na aplicação (não no `.env` do repositório). |
 | **Produção** | `JWT_SECRET` forte (≥ 32 caracteres); HTTPS; sem credenciais admin padrão. |
@@ -346,7 +347,57 @@ Os PDFs exportados pela ferramenta estão em [`secureforgeweb_web/resultados/`](
 | SecureForge Web | Autoavaliação | 63% | 9 | 1 / 4 / 4 / 0 |
 | SecureForge Web v2 | Autoavaliação | **75%** | 6 | 1 / 2 / 3 / 0 |
 
-C/A/M/B = crítica / alta / média / baixa. O score é a proporção de itens **conformes** + **N/A** sobre 24 itens.
+C/A/M/B = crítica / alta / média / baixa.
+
+**Fórmula do score (plataforma):** `(conforme + N/A) / 24`. Itens N/A contam como positivos (mesma regra do dashboard/PDF). O estudo de 24/07/2026 **não publicou a contagem de N/A por alvo**; por isso os scores da tabela **não devem ser lidos como taxa de conformidade só sobre controlos aplicáveis**. Um score só-aplicáveis e a coluna N/A ficam como trabalho futuro (não é possível reconstruir N/A a partir dos PDFs sem reabrir as análises).
+
+### Checklist Essential SecureForge v1.0 ↔ OWASP ASVS 5.0
+
+Perfil de 24 itens / 9 categorias usado no estudo. Cada item aponta para **um** requisito ASVS 5.0.0 no formato canónico `v5.0.0-X.Y.Z` (o catálogo completo ASVS L1/Complete também está na ferramenta).
+
+| Código | Categoria | Item | ASVS 5.0 |
+|--------|-----------|------|----------|
+| AUTH-01 | Autenticação | Política de senha mínima | `v5.0.0-6.2.1` |
+| AUTH-02 | Autenticação | Hash de senha forte | `v5.0.0-11.4.2` |
+| AUTH-03 | Autenticação | Proteção contra força bruta | `v5.0.0-6.3.1` |
+| AUTH-04 | Autenticação | Expiração de sessão | `v5.0.0-7.1.1` |
+| AUTHZ-01 | Autorização | Controle de acesso por perfil | `v5.0.0-8.2.1` |
+| AUTHZ-02 | Autorização | Princípio do menor privilégio | `v5.0.0-8.2.2` |
+| AUTHZ-03 | Autorização | Rotas administrativas protegidas | `v5.0.0-8.2.3` |
+| INPUT-01 | Validação de entrada | Validação server-side | `v5.0.0-1.2.1` |
+| INPUT-02 | Validação de entrada | Queries parametrizadas | `v5.0.0-1.2.4` |
+| INPUT-03 | Validação de entrada | Sanitização anti-XSS | `v5.0.0-1.2.3` |
+| SECRET-01 | Proteção de credenciais | Segredos em variáveis de ambiente | `v5.0.0-13.3.1` |
+| SECRET-02 | Proteção de credenciais | Ausência de credenciais no repositório | `v5.0.0-13.3.2` |
+| HEADER-01 | Headers | Content-Security-Policy | `v5.0.0-3.4.3` |
+| HEADER-02 | Headers | Strict-Transport-Security | `v5.0.0-3.4.1` |
+| HEADER-03 | Headers | X-Frame-Options / frame-ancestors | `v5.0.0-3.4.6` |
+| HEADER-04 | Headers | X-Content-Type-Options | `v5.0.0-3.4.4` |
+| EXPOS-01 | Exposição | APIs sensíveis autenticadas | `v5.0.0-4.2.1` |
+| EXPOS-02 | Exposição | Documentação de API restrita | `v5.0.0-14.2.1` |
+| ERROR-01 | Erros | Sem stack trace em produção | `v5.0.0-16.5.1` |
+| ERROR-02 | Erros | Mensagens genéricas ao usuário | `v5.0.0-16.5.2` |
+| DATA-01 | Dados | HTTPS/TLS em trânsito | `v5.0.0-12.2.1` |
+| DATA-02 | Dados | Dados sensíveis fora de logs | `v5.0.0-17.1.1` |
+| SURF-01 | Superfície | Portas e serviços desnecessários | `v5.0.0-1.1.1` |
+| SURF-02 | Superfície | Dependências atualizadas | `v5.0.0-15.2.4` |
+
+O Essential **não** substitui o ASVS completo: é um perfil operacional para times de baixa maturidade. A ferramenta também importa ASVS 5.0 Level 1 e Complete.
+
+### Posicionamento face a ferramentas existentes
+
+A SecureForge Web **não** é um scanner de vulnerabilidades nem um agregador de findings. Contribuição = **operacionalizar** checklist + evidência + decisão humana.
+
+| Ferramenta | Papel típico | O que a SecureForge **não** substitui | O que é específico aqui |
+|------------|--------------|----------------------------------------|-------------------------|
+| OWASP ZAP / Burp / Probely | DAST / proxy | Crawling, payloads, CVEs | Checklist guiado com HITL |
+| Semgrep | SAST | Regras profundas por linguagem | Heurísticas Git pontuais + evidência por item |
+| DefectDojo / Faraday / Dradis | Gestão/agregação de achados | Ingestão multi-scanner, ASVS scoring maduro | Wizard item-a-item, sugestão ≠ decisão |
+| SKF | Conhecimento / labs AppSec | Conteúdo educativo OWASP | Fluxo de avaliação + PDF de postura |
+
+### Ambiente pronto (VM)
+
+Não há OVA/VM pré-instalada. O atalho oficial é `docker compose up -d` (PostgreSQL) + `pnpm db:setup` + `pnpm dev`, ou o [pacote de instaladores](#pacote-de-instaladores-google-drive). Uma imagem de VM fica como trabalho futuro (não cabe no prazo do camera-ready).
 
 ### Reivindicação 1 — Fluxo ponta a ponta
 

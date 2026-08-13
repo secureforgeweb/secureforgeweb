@@ -129,5 +129,12 @@ secureforgeweb_web/docs/**
 # README operacional interno (conteúdo consolidado no README.md da raiz)
 secureforgeweb_web/readme-web.md
 
+# Demo video generation / merge (local only — never commit)
+secureforgeweb_web/scripts/_gen_demo_videos_*.py
+secureforgeweb_web/scripts/_merge_video*.py
+
+# One-off local TLS/header probes (not part of the app)
+secureforgeweb_web/scripts/probe_tls_debug.ts
+
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/

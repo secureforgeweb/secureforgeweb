@@ -122,6 +122,10 @@ describe("checklistAssessor — fetchHttpSecuritySnapshot", () => {
     vi.unstubAllGlobals();
   });
 
+  it("recusa destino de metadados (SSRF)", async () => {
+    await expect(fetchHttpSecuritySnapshot("http://169.254.169.254/")).rejects.toThrow(/bloqueado/);
+  });
+
   it("consulta URL e normaliza headers", async () => {
     const snapshot = await fetchHttpSecuritySnapshot("https://secure.test");
     expect(snapshot.statusCode).toBe(200);
