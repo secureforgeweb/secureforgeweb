@@ -173,7 +173,7 @@ Espelho dos instaladores oficiais para Windows. Prefira as páginas oficiais qua
 | 1 | Descarregar Git, Node 22 e PostgreSQL (ou Docker) | **01** |
 | 2 | Instalar e validar `git` / `node` / `pnpm` | **02** |
 | 3 | Clonar o repositório | **03** |
-| 4 | `.env`, `pnpm install`, `pnpm db:setup` | **04** |
+| 4 | `.env`, criar DB (Docker ou `init-postgres.sql`), `pnpm install`, `pnpm db:setup` | **04** |
 | 5 | `pnpm dev` + fluxo na UI até PDF | **05** |
 
 ### Dependências opcionais
@@ -247,19 +247,37 @@ FRONTEND_URL=http://localhost:5173
 VITE_API_PROXY_TARGET=http://localhost:3000
 ```
 
-**PostgreSQL (Docker):**
+O nome da base no final da `DATABASE_URL` (`secureforgeweb`) tem de existir **antes** de `pnpm db:setup`. Não altere para nomes inventados (ex.: `secureforge_dev`) sem criar essa base primeiro.
+
+### 4. Criar a base PostgreSQL (obrigatório)
+
+`pnpm db:setup` **não cria** o utilizador nem a base vazia — só espera a ligação, aplica migrações e faz seed/import. Escolha **um** caminho:
+
+**Opção A — Docker (recomendado):** cria user + base `secureforgeweb` automaticamente (valores iguais ao `.env.example`):
 
 ```powershell
 docker compose up -d
+docker compose ps   # healthy = pronto
 ```
 
-### 4. Criar esquema e popular checklists
+**Opção B — PostgreSQL local (instalador EDB):** com o serviço na porta 5432, como superutilizador `postgres`:
+
+```powershell
+# Ajuste o caminho do psql se necessário (ex.: Program Files\PostgreSQL\18\bin)
+psql -U postgres -f scripts/init-postgres.sql
+```
+
+Isto cria `secureforgeweb_user` / `secureforgeweb_pass` e a base `secureforgeweb`. Atalho: `.\scripts\setup-local-db.ps1` (tenta Docker; se não houver, mostra o comando `psql`).
+
+### 5. Criar esquema e popular checklists
 
 ```bash
 pnpm db:setup   # wait Postgres + migrate + seed Essential v1.0 + import ASVS 5.0
 ```
 
-### 5. Arrancar a aplicação
+Se aparecer `database "…" does not exist`: a `DATABASE_URL` aponta para uma base que não foi criada — volte ao passo 4 ou alinhe o nome da base com o `.env.example`.
+
+### 6. Arrancar a aplicação
 
 ```bash
 pnpm dev
@@ -445,7 +463,7 @@ Acesso recomendado: *qualquer pessoa com o link* (leitura).
 | **01** | `01-download-ferramentas.mp4` | ~2 min | Pasta instaladores Drive e/ou sites oficiais |
 | **02** | `02-instalacao-config-ferramentas.mp4` | 2–3 min | Instalar Git, Node 22, PostgreSQL (ou Docker); ativar pnpm |
 | **03** | `03-git-clone.mp4` | ~1 min | `git clone` do repositório oficial |
-| **04** | `04-deps-env-banco.mp4` | ~5 min | `.env`, `pnpm install`, `pnpm db:setup` |
+| **04** | `04-deps-env-banco.mp4` | ~5 min | `.env`, criar DB (Docker ou `init-postgres.sql`), `pnpm install`, `pnpm db:setup` |
 | **05** | `05-execucao-e-resultados.mp4` | 5–6 min | `pnpm dev` + cadastro, análise, dashboard e PDF |
 
 **Duração total (01–05):** ~15–17 minutos.
@@ -459,7 +477,10 @@ cd secureforgeweb\secureforgeweb_web
 
 # 04 — deps e banco
 copy .env.example .env
-# editar DATABASE_URL e JWT_SECRET; opcional: docker compose up -d
+# editar JWT_SECRET (>= 32 chars); manter DATABASE_URL do .env.example
+# Criar a base ANTES de db:setup (escolha uma):
+docker compose up -d
+#   OU, com PostgreSQL local: psql -U postgres -f scripts/init-postgres.sql
 pnpm install
 pnpm db:setup
 
