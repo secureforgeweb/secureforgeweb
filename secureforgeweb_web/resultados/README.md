@@ -19,3 +19,6 @@ Relatórios de postura exportados pela SecureForge Web no estudo de caso
 | `secureforgeweb-secureforge-web-v2-2026-07-24.pdf` | SecureForge Web v2 (pós-hardening parcial) |
 
 Estes PDFs correspondem às métricas da avaliação experimental (scores, achados e severidades).
+
+Protocolo de reprodução (alvos, consenso, hardening 63%→75%, limitações):
+[`PROTOCOLO_ESTUDO.md`](PROTOCOLO_ESTUDO.md).

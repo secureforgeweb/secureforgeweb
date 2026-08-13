@@ -81,9 +81,9 @@ Os autores solicitam a avaliação do artefato para **todos os selos** disponív
 | Selo | Nome | Justificativa na SecureForge Web |
 |------|------|----------------------------------|
 | **Selo D** | Artefatos Disponíveis | Código-fonte, este README, capturas e PDFs em [github.com/secureforgeweb/secureforgeweb](https://github.com/secureforgeweb/secureforgeweb); pastas Drive de [vídeos](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link) e [instaladores](https://drive.google.com/drive/folders/1TaGlQJnZbYwSjW1J5YGOxmcllMaqsjJV?usp=sharing); licença MIT. |
-| **Selo F** | Artefatos Funcionais | Dependências e [pacote de instaladores](#pacote-de-instaladores-google-drive); [Instalação](#instalação); **teste mínimo** (`pnpm check`, `pnpm test`) e fluxo UI (cadastro → checklist → achados → PDF); playlist **01–05**. |
-| **Selo S** | Artefatos Sustentáveis | Código modular (`frontend/`, `backend/`); este README descreve estrutura, APIs e fluxo; diagrama em `secureforgeweb_web/docs/screenshots/arquitetura.png`. |
-| **Selo R** | Experimentos Reprodutíveis | Estudo de caso com 12 alvos (Essential v1.0, 24/07/2026); PDFs em [`secureforgeweb_web/resultados/`](secureforgeweb_web/resultados/); secção [Experimentos](#experimentos) e playlist para reproduzir o fluxo ponta a ponta. |
+| **Selo F** | Artefatos Funcionais | Dependências e [pacote de instaladores](#pacote-de-instaladores-google-drive); [Instalação](#instalação); **teste mínimo** (`pnpm check`, `pnpm test` — suíte da SecureForge Web/postura) e fluxo UI (cadastro → checklist → achados → PDF); playlist **01–05**. |
+| **Selo S** | Artefatos Sustentáveis | Código modular (`frontend/`, `backend/`); este README descreve estrutura, APIs e fluxo; diagrama em `secureforgeweb_web/docs/screenshots/arquitetura.png`; testes alinhados ao produto submetido (sem suíte legado Incident/ML). |
+| **Selo R** | Experimentos Reprodutíveis | Estudo Essential v1.0 (24/07/2026, 12 alvos); PDFs + [protocolo](secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md) em [`resultados/`](secureforgeweb_web/resultados/); secção [Experimentos](#experimentos). |
 
 > **Salão de Ferramentas (SF) 2026:** modalidade **Código Aberto** — URL da playlist = pasta Drive de [demonstração](https://drive.google.com/drive/folders/1oJRC9_3Zjx5ahBdgdXSajCKXhYjytKWX?usp=drive_link).
 
@@ -319,7 +319,7 @@ pnpm test
 # opcional: pnpm build
 ```
 
-**Resultado esperado:** ambos terminam com código 0.
+**Resultado esperado:** ambos terminam com código 0. A suíte `pnpm test` cobre a SecureForge Web (postura OWASP: auth, aplicações, análises, assessores, SSRF, PDF, etc.) — **não** inclui testes do produto legado Incident Sys / Flask ML.
 
 ### Parte B — Fluxo funcional na UI (vídeo **05**)
 
@@ -339,35 +339,55 @@ pnpm test
 
 Esta secção reproduz o **estudo de caso** do artigo: avaliação com o perfil **Checklist Essential SecureForge v1.0** (24 itens / 9 categorias) sobre **12 alvos**, em **24/07/2026**.
 
-Os PDFs exportados pela ferramenta estão em [`secureforgeweb_web/resultados/`](secureforgeweb_web/resultados/).
+Os PDFs exportados pela ferramenta estão em [`secureforgeweb_web/resultados/`](secureforgeweb_web/resultados/). O protocolo detalhado (alvos, consenso, hardening 63%→75%, limitações) está em [`secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md`](secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md).
 
 ### Pré-requisitos
 
 * Instalação concluída ([Instalação](#instalação)).
 * `pnpm dev` em execução.
 * Conta autenticada na interface.
-* Alvos acessíveis (labs locais e/ou demos públicas).
+* Alvos acessíveis (labs locais e/ou demos públicas) — ver tabela de preparação abaixo.
 
 ### Indicadores de referência (Essential v1.0, 24/07/2026)
 
-| Aplicação | Perfil | Score | Achados | C/A/M/B |
-|-----------|--------|------:|--------:|---------|
-| VAmPI | Lab. vulnerável | 25% | 18 | 4 / 9 / 5 / 0 |
-| OWASP WebGoat (Java) | Lab. vulnerável | 29% | 17 | 5 / 8 / 4 / 0 |
-| OWASP NodeGoat | Lab. vulnerável | 33% | 16 | 4 / 8 / 3 / 1 |
-| OWASP WebGoat (PHP) | Lab. vulnerável | 33% | 16 | 5 / 6 / 5 / 0 |
-| DVWA | Lab. vulnerável | 38% | 15 | 4 / 7 / 4 / 0 |
-| OWASP Mutillidae II | Lab. vulnerável | 38% | 15 | 5 / 6 / 4 / 0 |
-| Ghost CMS | Demo OSS | 42% | 14 | 3 / 7 / 4 / 0 |
-| Gitea | Demo OSS | 42% | 14 | 3 / 7 / 3 / 1 |
-| OWASP Juice Shop | Lab. vulnerável | 46% | 13 | 4 / 6 / 3 / 0 |
-| Mattermost | Demo OSS | 58% | 10 | 3 / 5 / 1 / 1 |
-| SecureForge Web | Autoavaliação | 63% | 9 | 1 / 4 / 4 / 0 |
-| SecureForge Web v2 | Autoavaliação | **75%** | 6 | 1 / 2 / 3 / 0 |
+| Aplicação | Perfil | Score | Achados | C/A/M/B | PDF |
+|-----------|--------|------:|--------:|---------|-----|
+| VAmPI | Lab. vulnerável | 25% | 18 | 4 / 9 / 5 / 0 | `secureforgeweb-vampi-2026-07-24.pdf` |
+| OWASP WebGoat (Java) | Lab. vulnerável | 29% | 17 | 5 / 8 / 4 / 0 | `secureforgeweb-owasp-webgoatjava-2026-07-24.pdf` |
+| OWASP NodeGoat | Lab. vulnerável | 33% | 16 | 4 / 8 / 3 / 1 | `secureforgeweb-owasp-nodegoat-2026-07-24.pdf` |
+| OWASP WebGoat (PHP) | Lab. vulnerável | 33% | 16 | 5 / 6 / 5 / 0 | `secureforgeweb-owasp-webgoatphp-2026-07-24.pdf` |
+| DVWA | Lab. vulnerável | 38% | 15 | 4 / 7 / 4 / 0 | `secureforgeweb-dvwa-2026-07-24.pdf` |
+| OWASP Mutillidae II | Lab. vulnerável | 38% | 15 | 5 / 6 / 4 / 0 | `secureforgeweb-owasp-mutillidae-ii-2026-07-24.pdf` |
+| Ghost CMS | Demo OSS | 42% | 14 | 3 / 7 / 4 / 0 | `secureforgeweb-ghost-cms-2026-07-24.pdf` |
+| Gitea | Demo OSS | 42% | 14 | 3 / 7 / 3 / 1 | `secureforgeweb-gitea-2026-07-24.pdf` |
+| OWASP Juice Shop | Lab. vulnerável | 46% | 13 | 4 / 6 / 3 / 0 | `secureforgeweb-owasp-juice-shop-2026-07-24.pdf` |
+| Mattermost | Demo OSS | 58% | 10 | 3 / 5 / 1 / 1 | `secureforgeweb-mattermost-2026-07-24.pdf` |
+| SecureForge Web | Autoavaliação | 63% | 9 | 1 / 4 / 4 / 0 | `secureforgeweb-secureforge-web-2026-07-24.pdf` |
+| SecureForge Web v2 | Autoavaliação | **75%** | 6 | 1 / 2 / 3 / 0 | `secureforgeweb-secureforge-web-v2-2026-07-24.pdf` |
 
 C/A/M/B = crítica / alta / média / baixa.
 
-**Fórmula do score (plataforma):** `(conforme + N/A) / 24`. Itens N/A contam como positivos (mesma regra do dashboard/PDF). O estudo de 24/07/2026 **não publicou a contagem de N/A por alvo**; por isso os scores da tabela **não devem ser lidos como taxa de conformidade só sobre controlos aplicáveis**. Um score só-aplicáveis e a coluna N/A ficam como trabalho futuro (não é possível reconstruir N/A a partir dos PDFs sem reabrir as análises).
+**Fórmula do score (plataforma):** `(conforme + N/A) / 24`. Itens N/A contam como positivos (mesma regra do dashboard/PDF). Os PDFs listam os **achados** (itens em plano de ação). Os restantes itens até 24 foram **conforme ou N/A**; a **contagem N/A por alvo não foi arquivada** no estudo — não é possível separar conforme vs N/A só a partir dos PDFs.
+
+### Preparação dos alvos (URLs / fontes)
+
+| Alvo | URL no estudo (PDF) | Como preparar para repetir |
+|------|---------------------|----------------------------|
+| Ghost CMS | `https://demo.ghost.io/` | Usar a demo pública (pode mudar ao longo do tempo) |
+| Gitea | `https://demo.gitea.com/` | Idem |
+| Mattermost | `https://community.mattermost.com/landing#/` | Idem |
+| SecureForge Web / v2 | `https://localhost:5173/` | Instância local (`pnpm dev`; TLS conforme README) |
+| Juice Shop, DVWA, WebGoat (Java/PHP), NodeGoat, Mutillidae, VAmPI | *(URL local — não impressa no PDF)* | Labs **locais** via fontes oficiais (ver [PROTOCOLO_ESTUDO.md](secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md) §3.2). Ex.: Juice Shop `docker run --rm -p 3000:3000 bkimminich/juice-shop`. **Versões do dia 24/07 não foram pinadas.** |
+
+### Protocolo de decisão e consenso (dois analistas)
+
+1. Mesmo alvo, mesmo checklist Essential v1.0, mesmas evidências HTTP/Git/(IA opcional).
+2. Cada analista classifica os 24 itens de forma **independente** (conforme / não conforme / parcial / N/A).
+3. Divergências → discussão baseada na evidência observável até **consenso**; a classificação final é a consensual.
+4. O LLM (`gpt-4o-mini`, opcional) **sugere**; **não** substitui o consenso humano.
+5. Após consenso: concluir análise → gerar achados → exportar PDF (artefacto público por alvo).
+
+As fichas item-a-item e o log de divergências **não estão versionados**; a evidência pública por alvo é o PDF em `resultados/`.
 
 ### Checklist Essential SecureForge v1.0 ↔ OWASP ASVS 5.0
 
@@ -429,15 +449,25 @@ Não há OVA/VM pré-instalada. O atalho oficial (como na playlist) é PostgreSQ
 
 **Objetivo:** scores baixos em labs intencionalmente inseguros (25%–46%) e faixa intermédia em demos públicas (42%–58%).
 
-**Passos:** cadastrar alvos da tabela; executar Essential v1.0; comparar com os PDFs em `resultados/`.
+**Passos:**
 
-**Resultado esperado:** ordenação qualitativa alinhada à tabela (labs ≤ demos OSS ≤ autoavaliação endurecida).
+1. Preparar alvos conforme a tabela de preparação (demos públicas **ou** labs locais via §3.2 do protocolo).
+2. Para cada alvo: executar o [protocolo de decisão e consenso](#protocolo-de-decisão-e-consenso-dois-analistas) com Essential v1.0.
+3. Exportar PDF e comparar score / nº de achados / C/A/M/B com a tabela e com o PDF homónimo em `resultados/`.
+
+**Resultado esperado:** ordenação qualitativa **labs ≤ demos OSS ≤ autoavaliação endurecida**. Scores absolutos em demos online e labs sem versão pinada podem variar; os PDFs de 24/07/2026 são a referência fixa.
 
 ### Reivindicação 3 — Ciclo de hardening (autoavaliação)
 
-**Objetivo:** ilustrar 63% → 75% na SecureForge Web após hardening parcial.
+**Objetivo:** ilustrar **63% → 75%** na SecureForge Web após hardening **parcial**.
 
-**Passos:** avaliar a app local (baseline); aplicar remediações observáveis (ex.: headers); reavaliar; comparar PDFs `secureforgeweb-secureforge-web-*.pdf` e `…-v2-*.pdf`.
+**Passos:**
+
+1. Avaliar `https://localhost:5173/` em estado de desenvolvimento habitual (baseline) → PDF com ~9 achados (ver lista no protocolo §6).
+2. Aplicar remediações observáveis alinhadas aos itens que saíram do plano de ação entre os dois PDFs oficiais: **EXPOS-01**, **DATA-02**, **SURF-01** (detalhe em [PROTOCOLO_ESTUDO.md](secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md) §6).
+3. Reavaliar com o mesmo checklist e consenso → comparar com `secureforgeweb-secureforge-web-v2-2026-07-24.pdf`.
+
+**Delta documentado nos PDFs:** deixaram de aparecer como achados **EXPOS-01**, **DATA-02** e **SURF-01**. Permanecem abertos em ambos: DATA-01, HEADER-01..04, SURF-02.
 
 **Resultado esperado:** redução de achados e aumento de score na medição v2 (sem exigir conformidade plena).
 

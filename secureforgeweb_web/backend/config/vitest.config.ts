@@ -17,6 +17,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Suíte alinhada à SecureForge Web (postura OWASP). Testes do produto legado
+    // Incident Sys / Flask ML foram removidos para corresponder ao código submetido.
     include: ["backend/src/tests/**/*.test.ts", "backend/src/**/*.test.ts", "backend/src/**/*.spec.ts"],
   },
 });
