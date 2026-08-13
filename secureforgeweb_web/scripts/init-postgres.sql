@@ -1,5 +1,11 @@
--- SecureForge Web — script de inicialização do PostgreSQL
--- Execute como superusuário (postgres)
+-- SecureForge Web — criação de role + base PostgreSQL (instalação local / EDB)
+-- Execute como superutilizador:  psql -U postgres -f scripts/init-postgres.sql
+--
+-- IMPORTANTE: user, senha e nome da base abaixo DEVEM coincidir com a DATABASE_URL
+-- do ficheiro .env (ver .env.example). Se alterar a URL, edite este script primeiro.
+--
+-- Exemplo alinhado ao .env.example:
+--   DATABASE_URL=postgresql://secureforgeweb_user:secureforgeweb_pass@localhost:5432/secureforgeweb
 
 DO $$
 BEGIN

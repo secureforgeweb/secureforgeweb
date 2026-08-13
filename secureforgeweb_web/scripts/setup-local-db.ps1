@@ -14,6 +14,8 @@ if (Get-Command docker -ErrorAction SilentlyContinue) {
         exit 1
     }
 } else {
-    Write-Host "Docker não encontrado. Use PostgreSQL local e execute:" -ForegroundColor Yellow
-    Write-Host "  psql -U postgres -f scripts/init-postgres.sql" -ForegroundColor White
+    Write-Host "Docker não encontrado. Use PostgreSQL local:" -ForegroundColor Yellow
+    Write-Host "  1) Confirme DATABASE_URL no .env" -ForegroundColor White
+    Write-Host "  2) Se user/senha/base != .env.example, edite scripts/init-postgres.sql para coincidir" -ForegroundColor White
+    Write-Host "  3) psql -U postgres -f scripts/init-postgres.sql" -ForegroundColor White
 }

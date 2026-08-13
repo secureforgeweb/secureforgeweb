@@ -260,14 +260,18 @@ docker compose up -d
 docker compose ps   # healthy = pronto
 ```
 
-**Opção B — PostgreSQL local (instalador EDB):** com o serviço na porta 5432, como superutilizador `postgres`:
+**Opção B — PostgreSQL local (instalador EDB):** com o serviço na porta 5432:
+
+1. Defina a `DATABASE_URL` no `.env` (user, senha e nome da base).
+2. **Se não usar os valores do `.env.example`**, edite `scripts/init-postgres.sql` e alinhe o `CREATE USER` / `PASSWORD` / `CREATE DATABASE` / `OWNER` com essa URL **antes** de executar o script.
+3. Como superutilizador `postgres`:
 
 ```powershell
 # Ajuste o caminho do psql se necessário (ex.: Program Files\PostgreSQL\18\bin)
 psql -U postgres -f scripts/init-postgres.sql
 ```
 
-Isto cria `secureforgeweb_user` / `secureforgeweb_pass` e a base `secureforgeweb`. Atalho: `.\scripts\setup-local-db.ps1` (tenta Docker; se não houver, mostra o comando `psql`).
+Com os defaults do exemplo, isto cria `secureforgeweb_user` / `secureforgeweb_pass` e a base `secureforgeweb`. Atalho: `.\scripts\setup-local-db.ps1` (tenta Docker; se não houver, mostra o comando `psql`).
 
 ### 5. Criar esquema e popular checklists
 
@@ -477,10 +481,11 @@ cd secureforgeweb\secureforgeweb_web
 
 # 04 — deps e banco
 copy .env.example .env
-# editar JWT_SECRET (>= 32 chars); manter DATABASE_URL do .env.example
+# editar JWT_SECRET (>= 32 chars); DATABASE_URL = user/senha/base pretendidos
 # Criar a base ANTES de db:setup (escolha uma):
 docker compose up -d
-#   OU, com PostgreSQL local: psql -U postgres -f scripts/init-postgres.sql
+#   OU Postgres local: alinhar scripts/init-postgres.sql à DATABASE_URL, depois:
+#   psql -U postgres -f scripts/init-postgres.sql
 pnpm install
 pnpm db:setup
 
