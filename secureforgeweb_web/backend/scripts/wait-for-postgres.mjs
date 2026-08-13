@@ -27,9 +27,9 @@ function hintForError(message) {
   if (lower.includes("does not exist") && lower.includes("database")) {
     return (
       "[DB] A base da DATABASE_URL ainda não existe. " +
-      "Crie-a com `docker compose up -d` (cria secureforgeweb) " +
-      "ou `psql -U postgres -f scripts/init-postgres.sql`, " +
-      "e mantenha o nome igual ao do .env.example (secureforgeweb)."
+      "Com Postgres local (playlist): alinhe scripts/init-postgres.sql à DATABASE_URL " +
+      "e rode `psql -U postgres -f scripts/init-postgres.sql`. " +
+      "Alternativa opcional: `docker compose up -d`."
     );
   }
   if (
@@ -38,7 +38,7 @@ function hintForError(message) {
   ) {
     return (
       "[DB] Utilizador/senha da DATABASE_URL não coincidem com o Postgres. " +
-      "Com Docker use o .env.example; com instalação local rode scripts/init-postgres.sql."
+      "Use a senha definida no instalador EDB (ou no init-postgres.sql) e alinhe o .env."
     );
   }
   return null;

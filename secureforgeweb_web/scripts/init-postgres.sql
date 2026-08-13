@@ -1,12 +1,13 @@
--- SecureForge Web — criação de role + base PostgreSQL (instalação local / EDB)
--- Execute como superutilizador:  psql -U postgres -f scripts/init-postgres.sql
+-- SecureForge Web — criação de role + base PostgreSQL
+-- Caminho da playlist (vídeo 04): PostgreSQL local via instalador EDB
+-- Execute:  psql -U postgres -f scripts/init-postgres.sql
 --
 -- IMPORTANTE: user, senha e nome da base abaixo DEVEM coincidir com a DATABASE_URL
 -- do ficheiro .env (ver .env.example). Se alterar a URL, edite este script primeiro.
 --
 -- Exemplo alinhado ao .env.example:
 --   DATABASE_URL=postgresql://secureforgeweb_user:secureforgeweb_pass@localhost:5432/secureforgeweb
-
+-- Se no EDB usar o superutilizador postgres, alinhe user/senha aqui e no .env.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'secureforgeweb_user') THEN
