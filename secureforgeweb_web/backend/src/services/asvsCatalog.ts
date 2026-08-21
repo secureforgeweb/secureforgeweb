@@ -1,4 +1,7 @@
 import { eq } from "drizzle-orm";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { getDb } from "../models/db.js";
 import {
   checklists,
@@ -8,7 +11,9 @@ import {
 } from "../../drizzle/schema.js";
 import {
   ASVS5_ESSENTIAL_AUTOMATION_MAP,
+  ASVS5_FLAT_JSON_LOCAL_RELATIVE,
   ASVS5_FLAT_JSON_URL,
+  ASVS5_FLAT_JSON_URL_ALT,
   ASVS_GITHUB_RELEASES_URL,
   ASVS_SOURCE_VERSION,
   inferSeverityFromLevel,
@@ -94,12 +99,53 @@ function truncateTitle(description: string, maxLen = 255): string {
   return (lastSpace > 80 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
 }
 
-export async function fetchAsvsFlatDocument(url = ASVS5_FLAT_JSON_URL): Promise<AsvsFlatDocument> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Falha ao baixar ASVS (${response.status}): ${url}`);
+function resolveAsvsLocalFixturePath(): string {
+  // asvsCatalog.ts → backend/src/services → sobe 3 níveis até secureforgeweb_web/
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const appRoot = path.resolve(here, "../../..");
+  return path.join(appRoot, ASVS5_FLAT_JSON_LOCAL_RELATIVE);
+}
+
+async function loadAsvsFlatFromLocal(): Promise<AsvsFlatDocument> {
+  const localPath = resolveAsvsLocalFixturePath();
+  const raw = await readFile(localPath, "utf8");
+  return JSON.parse(raw) as AsvsFlatDocument;
+}
+
+/**
+ * Obtém o flat.json ASVS 5.0: tenta URLs remotas e, em falha (ex.: 404 transitório
+ * no GitHub), usa a cópia versionada em `backend/fixtures/`.
+ */
+export async function fetchAsvsFlatDocument(
+  url: string = ASVS5_FLAT_JSON_URL
+): Promise<AsvsFlatDocument> {
+  const candidates = Array.from(new Set([url, ASVS5_FLAT_JSON_URL, ASVS5_FLAT_JSON_URL_ALT]));
+  const errors: string[] = [];
+
+  for (const candidate of candidates) {
+    try {
+      const response = await fetch(candidate);
+      if (!response.ok) {
+        errors.push(`${candidate} → HTTP ${response.status}`);
+        continue;
+      }
+      return (await response.json()) as AsvsFlatDocument;
+    } catch (err) {
+      errors.push(`${candidate} → ${(err as Error).message}`);
+    }
   }
-  return (await response.json()) as AsvsFlatDocument;
+
+  try {
+    const doc = await loadAsvsFlatFromLocal();
+    console.warn(
+      `[ASVS] Download remoto falhou; usando fixture local (${ASVS5_FLAT_JSON_LOCAL_RELATIVE}). Motivos: ${errors.join("; ")}`
+    );
+    return doc;
+  } catch (err) {
+    throw new Error(
+      `Falha ao obter ASVS 5.0 (remoto e local). Remoto: ${errors.join("; ")}. Local: ${(err as Error).message}`
+    );
+  }
 }
 
 export async function fetchLatestAsvsReleaseVersion(): Promise<string | null> {

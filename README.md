@@ -221,11 +221,20 @@ cd secureforgeweb/secureforgeweb_web
 
 ### 2. Instalar dependências Node
 
-No Windows, `corepack enable` em geral exige terminal **como Administrador**:
+No Windows, `corepack enable` em geral exige terminal **como Administrador**.
+
+Se `pnpm` ou scripts `.ps1` falharem com erro de política de execução (`…running scripts is disabled on this system`), libere scripts para o usuário atual **uma vez** (não exige Admin):
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Depois:
 
 ```powershell
 corepack enable
 corepack prepare pnpm@latest --activate
+pnpm -v
 pnpm install
 ```
 
@@ -277,6 +286,8 @@ pnpm db:setup   # wait Postgres + migrate + seed Essential v1.0 + import ASVS 5.
 ```
 
 Se aparecer `database "…" does not exist`: a base da `DATABASE_URL` ainda não foi criada — volte ao passo 4 (`psql … init-postgres.sql`) e confirme que o nome no `.env` e no SQL são o mesmo.
+
+O import ASVS tenta baixar o `flat.json` da tag OWASP **v5.0.0**; se a rede/GitHub falhar (ex.: HTTP 404 transitório), usa automaticamente a cópia versionada em `secureforgeweb_web/backend/fixtures/asvs-5.0.0-en.flat.json`. O seed Essential (24 itens) roda **antes** do import ASVS e não depende da rede.
 ### 6. Arrancar a aplicação
 
 ```bash
@@ -379,7 +390,7 @@ C/A/M/B = crítica / alta / média / baixa.
 | Gitea | `https://demo.gitea.com/` | Idem |
 | Mattermost | `https://community.mattermost.com/landing#/` | Idem |
 | SecureForge Web / v2 | `https://localhost:5173/` | Instância local (`pnpm dev`; TLS conforme README) |
-| Juice Shop, DVWA, WebGoat (Java/PHP), NodeGoat, Mutillidae, VAmPI | *(URL local — não impressa no PDF)* | Labs **locais** via fontes oficiais (ver [PROTOCOLO_ESTUDO.md](secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md) §3.2). Ex.: Juice Shop `docker run --rm -p 3000:3000 bkimminich/juice-shop`. **Versões do dia 24/07 não foram pinadas.** |
+| Juice Shop, DVWA, WebGoat (Java/PHP), NodeGoat, Mutillidae, VAmPI | *(URL local — não impressa no PDF)* | Labs **locais** via fontes oficiais (ver [PROTOCOLO_ESTUDO.md](secureforgeweb_web/resultados/PROTOCOLO_ESTUDO.md) §3.2). Ex.: Juice Shop `docker run --rm -p 3000:3000 bkimminich/juice-shop`. **Versões exatas do dia 24/07/2026 não foram pinadas** (limitação conhecida; ver protocolo §3.2 e §7). |
 
 ### Protocolo de decisão e consenso (dois analistas)
 

@@ -30,8 +30,19 @@ export const ASVS5_ESSENTIAL_AUTOMATION_MAP: Record<string, string> = {
   "V1.1.1": "SURF-01",
 };
 
+/** Mirror oficial (raw) — preferido: menos redirects que github.com/.../raw/... */
 export const ASVS5_FLAT_JSON_URL =
+  "https://raw.githubusercontent.com/OWASP/ASVS/v5.0.0/5.0/docs_en/OWASP_Application_Security_Verification_Standard_5.0.0_en.flat.json";
+
+/** URL alternativa (mesmo arquivo). */
+export const ASVS5_FLAT_JSON_URL_ALT =
   "https://github.com/OWASP/ASVS/raw/v5.0.0/5.0/docs_en/OWASP_Application_Security_Verification_Standard_5.0.0_en.flat.json";
+
+/**
+ * Cópia local versionada (tag OWASP ASVS v5.0.0) para `pnpm db:import-asvs`
+ * quando a rede/GitHub devolver 404 ou falhar — ver `backend/fixtures/`.
+ */
+export const ASVS5_FLAT_JSON_LOCAL_RELATIVE = "backend/fixtures/asvs-5.0.0-en.flat.json";
 
 /** Quando a OWASP publicar flat.json pt-BR oficial, apontar aqui. */
 export const ASVS5_FLAT_JSON_URL_PT =

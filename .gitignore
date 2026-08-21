@@ -136,5 +136,8 @@ secureforgeweb_web/scripts/_merge_video*.py
 # One-off local TLS/header probes (not part of the app)
 secureforgeweb_web/scripts/probe_tls_debug.ts
 
+# Apresentação local do evento (PDF/fonte) — nunca versionar
+apresentacao/
+
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/

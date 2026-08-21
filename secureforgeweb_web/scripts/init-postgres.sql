@@ -3,11 +3,13 @@
 -- Execute:  psql -U postgres -f scripts/init-postgres.sql
 --
 -- IMPORTANTE: user, senha e nome da base abaixo DEVEM coincidir com a DATABASE_URL
--- do ficheiro .env (ver .env.example). Se alterar a URL, edite este script primeiro.
+-- do arquivo .env (ver .env.example). Se alterar a URL, edite este script primeiro.
 --
--- Exemplo alinhado ao .env.example:
+-- Canônico (alinhado ao .env.example e ao docker-compose.yml):
 --   DATABASE_URL=postgresql://secureforgeweb_user:secureforgeweb_pass@localhost:5432/secureforgeweb
--- Se no EDB usar o superutilizador postgres, alinhe user/senha aqui e no .env.
+-- O nome da base é "secureforgeweb" (não "secureforge_dev").
+-- Se no EDB usar o superusuário postgres, alinhe user/senha aqui e no .env.
+
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'secureforgeweb_user') THEN
